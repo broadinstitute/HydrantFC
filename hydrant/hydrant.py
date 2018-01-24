@@ -28,8 +28,7 @@ def validate_util(hydrantbin, url, name):
 
 def main():
     defaults = Defaults(
-        HYDRANTBIN = os.path.expanduser(os.path.join(os.environ("~"),
-                                                     ".hydrantutil")),
+        HYDRANTBIN = os.path.expanduser(os.path.join("~", ".hydrantutil")),
         CROMWELL_RELEASE = "https://github.com/broadinstitute/cromwell/" +
                            "releases/download/29/cromwell-29.jar",
         WDLTOOL_RELEASE = "https://github.com/broadinstitute/wdltool/" +
