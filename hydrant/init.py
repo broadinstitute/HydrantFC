@@ -185,7 +185,7 @@ def generate_workflow_folder(foldername):
 
 def main(args=None):
 	parser = ArgumentParser(description="Template generator for " +
-						    "gdac-firecloud tasks and workflows")
+						    "FireCloud tasks and workflows")
 	group = parser.add_mutually_exclusive_group(required=True)
 	group.add_argument('-t', '--task', action='store_true',
 					   help='Create a template task folder')
