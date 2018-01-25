@@ -177,7 +177,7 @@ def generate_workflow_folder(foldername):
 	generate_task_folder(task_n_folder, True)
 	
 	# test folder
-	os.mkdir(os.path.join(foldername, "test"))
+	os.mkdir(os.path.join(foldername, "tests"))
 
 	wdl_path = os.path.join(foldername, foldername + ".wdl")
 	with open(wdl_path, 'w') as wf:
@@ -186,6 +186,8 @@ def generate_workflow_folder(foldername):
 def main(args=None):
 	parser = ArgumentParser(description="Template generator for " +
 						    "FireCloud tasks and workflows")
+	if __name__ != '__main__':
+		parser.prog += " " + __name__.rsplit('.', 1)[-1]
 	group = parser.add_mutually_exclusive_group(required=True)
 	group.add_argument('-t', '--task', action='store_true',
 					   help='Create a template task folder')
