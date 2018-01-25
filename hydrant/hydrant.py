@@ -4,7 +4,7 @@
 import os
 import sys
 import logging
-import subprocess
+from subprocess import check_call, check_output
 from argparse import ArgumentParser
 from pkg_resources import resource_filename
 
@@ -12,6 +12,7 @@ from collections import namedtuple
 from six.moves.urllib.request import urlretrieve
 
 from init import main as init
+from install import main as install
 from __about__ import __version__
 
 Config = namedtuple('Config',
@@ -34,13 +35,13 @@ def validate(config, wdl, inputs_json='tests/inputs.json'):
                             "wdltool")
     inputs_json_bak = None
     try:
-        subprocess.check_call(['java', '-jar', WDLTOOL, 'validate', wdl])
+        check_call(['java', '-jar', WDLTOOL, 'validate', wdl])
         if os.path.exists(inputs_json):
             inputs_json_bak = inputs_json + '.bak'
             os.rename(inputs_json, inputs_json_bak)
         with open(inputs_json, 'w') as inputs:
-            os.write(inputs, subprocess.check_output(['java', '-jar', WDLTOOL,
-                                                      'inputs', wdl]))
+            logging.info('Writing %s', inputs_json)
+            inputs.write(check_output(['java', '-jar', WDLTOOL, 'inputs', wdl]))
     except:
         if inputs_json_bak is not None:
             os.rename(inputs_json_bak, inputs_json)
@@ -58,21 +59,17 @@ def test(config, wdl, inputs_json='tests/inputs.json'):
     CROMWELL = validate_util(config.HYDRANTBIN, config.CROMWELL_RELEASE,
                              "Command-line cromwell")
     try:
-        subprocess.check_call([runcromw, CROMWELL, wdl, inputs_json])
+        check_call([runcromw, CROMWELL, wdl, inputs_json])
     except:
         logging.exception('Workflow test failed')
         sys.exit(1)
-    
-
-def install():
-    pass
 
 def config():
     pass
 
-def main():
+def main(args=None):
     defaults = Config(
-        HYDRANTBIN = os.path.expanduser(os.path.join("~", ".hydrantutil")),
+        HYDRANTBIN = os.path.expanduser(os.path.join("~", ".hydrant")),
         CROMWELL_RELEASE = "https://github.com/broadinstitute/cromwell/" +
                            "releases/download/29/cromwell-29.jar",
         WDLTOOL_RELEASE  = "https://github.com/broadinstitute/wdltool/" +
@@ -100,12 +97,12 @@ def main():
     subparsers.add_parser('test', help="Run command-line cromwell to test " +
                           "the workflow defined in the WDL with test data " +
                           "specified in inputs.json")
-    subparsers.add_parser('install',
+    subparsers.add_parser('install', add_help=False,
                           help="Push WDL to your FireCloud method repository")
     subparsers.add_parser('config', help="Update workspace task configs " +
                           "with the latest snapshot you have committed")
     
-    args, opts = parser.parse_known_args()
+    args, opts = parser.parse_known_args(args)
     
     # TODO: Build a dict of hydrant arguments with values being the function to
     #       call, it will make the below a lot cleaner.
@@ -116,6 +113,8 @@ def main():
         validate(defaults, wdl)
     elif args.subcmd == 'test':
         test(defaults, wdl)
+    elif args.subcmd == 'install':
+        install(opts)
     
 if __name__ == '__main__':
     main()

@@ -10,7 +10,7 @@
 #
 # Assumes color terminal (error content is bracked by RED control sequences)
 
-set -o pipefail
+set -eo pipefail
 
 if [ "$1" = "-x" ] ; then
     # Helpful cli debugging
@@ -23,7 +23,26 @@ Options=$myDir/options.json
 
 CromWell=$1
 PathToWDL=$2
-shift 2
+PathToInputs=$3
+shift 3
+
+redmsg()
+{
+    echo "[38;5;1m${@}[0m"
+}
+
+chkfile()
+{
+    if [ ! -s $1 ] ; then
+        redmsg "File missing or empty: $1"
+        exit 1
+    fi
+}
+
+chkfile $CromWell
+chkfile $PathToWDL
+chkfile $PathToInputs
+chkfile $Options
 
 TaskNames=(`egrep "^[       ]*task" $PathToWDL | awk '{print $2}'`)
 FlowName=`egrep -m 1 "^[       ]*workflow " $PathToWDL | awk '{print $2}'`
@@ -31,12 +50,7 @@ ExecDir=running
 DoneDir=latest
 LogFile=run-${FlowName}.`date +"%Y_%m_%d__%H_%M_%S"`.log
 
-redmsg()    # {{{
-{
-	echo "[38;5;1m${@}[0m"
-}   # }}}
-
-Command="java -jar $CromWell run -i $@ -o $Options $PathToWDL"
+Command="java -jar $CromWell run -i $PathToInputs -o $Options $PathToWDL"
 echo
 redmsg "Running cromwell:"
 echo "    $Command"
