@@ -1,7 +1,7 @@
 import os
 from setuptools import setup, find_packages
 from hydrant.__about__ import __version__
-_README           = os.path.join(os.path.dirname(__file__), 'README.md')
+_README           = os.path.join(os.path.dirname(__file__), 'README.rst')
 _LONG_DESCRIPTION = open(_README).read()
 
 # Setup information
@@ -13,6 +13,7 @@ setup(
     author = 'Broad Institute CGA Genome Data Analysis Center',
     author_email = 'gdac@broadinstitute.org',
     long_description = _LONG_DESCRIPTION,
+    license = "BSD 3-Clause License",
     url = 'https://github.com/broadinstitute/HydrantFC',\
     entry_points = {
         'console_scripts': [
