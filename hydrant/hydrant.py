@@ -12,6 +12,7 @@ from collections import namedtuple
 from six.moves.urllib.request import urlretrieve
 
 from init import main as init
+from build import main as build
 from install import main as install
 from __about__ import __version__
 
@@ -47,9 +48,6 @@ def validate(config, wdl, inputs_json='tests/inputs.json'):
             os.rename(inputs_json_bak, inputs_json)
         logging.exception("Unable to validate %s", wdl)
         sys.exit(1)
-
-def build():
-    pass
 
 def publish():
     pass
@@ -87,7 +85,7 @@ def main(args=None):
                           "facilitate building a FireCloud workflow or a " +
                           "docker image for use in one", add_help=False)
     subparsers.add_parser('build', help="Build the docker image defined in " +
-                          "the local Dockerfile")
+                          "the local Dockerfile", add_help=False)
     subparsers.add_parser('publish', help="Push the docker image to dockerhub")
     subparsers.add_parser('sync', help="Update the WDLs of all local " +
                           "workflows using this docker image to the latest " +
@@ -115,6 +113,8 @@ def main(args=None):
         test(defaults, wdl)
     elif args.subcmd == 'install':
         install(opts)
+    elif args.subcmd == 'build':
+        build(opts)
     
 if __name__ == '__main__':
     main()
