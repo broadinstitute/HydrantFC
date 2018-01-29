@@ -9,6 +9,8 @@ def main(args=None):
     parser = ArgumentParser(description="Build docker image")
     if __name__ != '__main__':
         parser.prog += " " + __name__.rsplit('.', 1)[-1]
+    parser.add_argument('-R', '--registry',
+                        help="Host[:port] of registry if not at Docker Hub")
     parser.add_argument('-n', '--namespace', required=True,
                         help='Namespace under which the repository resides')
     parser.add_argument('-r', '--repository',
@@ -22,6 +24,8 @@ def main(args=None):
     repo = args.namespace + '/' + args.repository
     if args.tag is not None:
         repo += ':' + args.tag
+    if args.registry is not None:
+        repo = args.registry + '/' + repo
     
     client = docker.from_env()
     client.images.build(path='.', tag=repo, rm=True)

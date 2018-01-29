@@ -13,6 +13,7 @@ from six.moves.urllib.request import urlretrieve
 
 from init import main as init
 from build import main as build
+from publish import main as publish
 from install import main as install
 from __about__ import __version__
 
@@ -49,9 +50,6 @@ def validate(config, wdl, inputs_json='tests/inputs.json'):
         logging.exception("Unable to validate %s", wdl)
         sys.exit(1)
 
-def publish():
-    pass
-
 def test(config, wdl, inputs_json='tests/inputs.json'):
     runcromw = os.path.join(config.UTILS, 'runcromw.sh')
     CROMWELL = validate_util(config.HYDRANTBIN, config.CROMWELL_RELEASE,
@@ -86,7 +84,8 @@ def main(args=None):
                           "docker image for use in one", add_help=False)
     subparsers.add_parser('build', help="Build the docker image defined in " +
                           "the local Dockerfile", add_help=False)
-    subparsers.add_parser('publish', help="Push the docker image to dockerhub")
+    subparsers.add_parser('publish', help="Push the docker image to dockerhub",
+                          add_help=False)
     subparsers.add_parser('sync', help="Update the WDLs of all local " +
                           "workflows using this docker image to the latest " +
                           "version")
@@ -115,6 +114,8 @@ def main(args=None):
         install(opts)
     elif args.subcmd == 'build':
         build(opts)
+    elif args.subcmd == 'publish':
+        publish(opts)
     
 if __name__ == '__main__':
     main()
