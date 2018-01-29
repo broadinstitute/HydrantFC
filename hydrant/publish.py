@@ -39,7 +39,6 @@ def main(args=None):
                           "Please install one from %s before trying again.",
                           parser.prog,
                           "https://www.docker.com/community-edition#/download")
-        sys.exit(1)
         
     repo = os.path.basename(os.getcwd())
     registry, namespace = find_registry_namespace(client, repo)
@@ -55,8 +54,7 @@ def main(args=None):
     else:
         add_default_arg(namespace, ns_kwargs)
     parser.add_argument('-n', '--namespace', **ns_kwargs)
-    parser.add_argument('-r', '--repository',
-                        default=repo,
+    parser.add_argument('-r', '--repository', default=repo,
                         help='Repository name (default: %(default)s)')
     parser.add_argument('-t', '--tag', help="Version of the image or task " + \
                         "(default: latest)")
