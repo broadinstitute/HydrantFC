@@ -2,7 +2,6 @@
 # encoding: utf-8
 
 import os
-import sys
 import docker
 import logging
 from argparse import ArgumentParser

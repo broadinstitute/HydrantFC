@@ -14,14 +14,14 @@ def new_folder(folder_name):
 		os.mkdir(folder_name)
 		return folder_name
 
-def generate_task_folder(foldername, subtask=False):
+def generate_task(task):
 	##Make new folders
-	if not subtask:
-		os.mkdir(os.path.join(foldername, "src"))
+	os.makedirs(os.path.join(task, "src"))
 
 	##Paths for contents
-	version_path = os.path.join(foldername, "VERSION")
-	dockerfile_path = os.path.join(foldername, "Dockerfile")
+	version_path = os.path.join(task, "VERSION")
+	dockerfile_path = os.path.join(task, "Dockerfile")
+	dockerignore_path = os.path.join(task, ".dockerignore")
 
 	with open(version_path, 'w') as vf:
 		##Start with version 1
@@ -30,9 +30,12 @@ def generate_task_folder(foldername, subtask=False):
 	with open(dockerfile_path, 'w') as df:
 		df.write(dockerfile_contents())
 
-def workflow_wdl_contents(workflow_name):
-	pwuid = pwd.getpwuid(os.getuid())
-	contents = '''task task_1 {{
+	with open(dockerignore_path, 'w') as di:
+		di.write(dockerignore_contents())
+
+def task_wdl_contents(task_num, workflow, fullname, username):
+	if task_num == 1:
+		contents = '''task task_{tasknum} {{
 	Boolean package
 	String null_file
 	String package_name
@@ -63,7 +66,7 @@ def workflow_wdl_contents(workflow_name):
 	}}
 
 	runtime {{
-		docker : "broadgdac/task_1:1"
+		docker : "broadgdac/task_{tasknum}:1"
 		disks : "local-disk ${{if defined(local_disk_gb) then local_disk_gb else '10'}} HDD"
 		preemptible : "${{if defined(num_preemptions) then num_preemptions else '0'}}"
 	}}
@@ -74,7 +77,10 @@ def workflow_wdl_contents(workflow_name):
 	}}
 }}
 
-task task_n {{
+'''.format(tasknum=task_num, workflowname=workflow, fullname=fullname,
+		   username=username)
+	else:
+		contents = '''task task_{tasknum} {{
 	Boolean package
 	String null_file
 	File package_archive
@@ -106,7 +112,7 @@ task task_n {{
 	}}
 
 	runtime {{
-		docker : "broadgdac/task_n:1"
+		docker : "broadgdac/task_{tasknum}:1"
 		disks : "local-disk ${{if defined(local_disk_gb) then local_disk_gb else '10'}} HDD"
 		preemptible : "${{if defined(num_preemptions) then num_preemptions else '0'}}"
 	}}
@@ -117,29 +123,44 @@ task task_n {{
 	}}
 }}
 
-workflow {workflowname} {{
+'''.format(tasknum=task_num, workflowname=workflow, fullname=fullname,
+		   username=username)
+	return contents
+
+def workflow_wdl_contents(workflow_name, num_tasks):
+	pwuid = pwd.getpwuid(os.getuid())
+	tasks = ''
+	workflow = '''workflow {workflowname} {{
 	Boolean package
 	String null_file="gs://broad-institute-gdac/GDAC_FC_NULL"
-	String package_name="{workflowname}"
+	String package_name="{workflowname}"'''.format(workflowname=workflow_name)
+	for task in range(1, num_tasks + 1):
+		tasks += task_wdl_contents(task, workflow_name, pwuid[4], pwuid[0])
+		if task == 1:
+			workflow += '''
 
-	call task_1 {{
+	call task_1 {
 		input: package=package,
 			   null_file=null_file,
 			   package_name=package_name
-	}}
+	}'''
+		else:
+			workflow += '''
 
-	call task_n {{
+	call task_{tasknum} {{
 		input: package=package,
 			   null_file=null_file,
-			   package_archive=task_1.{workflowname}_pkg
-	}}
-	
+			   package_archive=task_{prevtask}.{workflowname}_pkg
+	}}'''.format(tasknum=task, prevtask=task - 1, workflowname=workflow_name)
+		if task == num_tasks:
+			workflow += '''
+
 	output {{
-		task_n.{workflowname}_pkg
+		task_{tasknum}.{workflowname}_pkg
 	}}
 }}
-'''.format(workflowname=workflow_name, fullname=pwuid[4], username=pwuid[0])
-	return contents
+'''.format(tasknum=task, workflowname=workflow_name)
+	return tasks + workflow
 
 def dockerfile_contents():
 	contents = '''FROM broadgdac/run-r:3.3.2
@@ -164,43 +185,38 @@ WORKDIR src
 '''
 	return contents
 
-def generate_workflow_folder(foldername):	
+def dockerignore_contents():
+	return '''*
+!src
+!Dockerfile
+'''
+
+def generate_workflow(workflow, num_tasks):	
 	# Make new folders
-	# src folder
-	src_folder = os.path.join(foldername, "src")
-	os.mkdir(src_folder)
-	task_1_folder = os.path.join(src_folder, "task_1")
-	os.mkdir(task_1_folder)
-	generate_task_folder(task_1_folder, True)
-	task_n_folder = os.path.join(src_folder, "task_n")
-	os.mkdir(task_n_folder)
-	generate_task_folder(task_n_folder, True)
+	# task folders
+	for task in range(1, num_tasks + 1):
+		task_folder = os.path.join(workflow, 'task_%d' % task)
+		generate_task(task_folder)
 	
 	# test folder
-	os.mkdir(os.path.join(foldername, "tests"))
+	os.mkdir(os.path.join(workflow, "tests"))
 
-	wdl_path = os.path.join(foldername, foldername + ".wdl")
+	wdl_path = os.path.join(workflow, workflow + ".wdl")
 	with open(wdl_path, 'w') as wf:
-		wf.write(workflow_wdl_contents(foldername))
+		wf.write(workflow_wdl_contents(workflow, num_tasks))
 
 def main(args=None):
 	parser = ArgumentParser(description="Template generator for " +
 						    "FireCloud tasks and workflows")
 	if __name__ != '__main__':
 		parser.prog += " " + __name__.rsplit('.', 1)[-1]
-	group = parser.add_mutually_exclusive_group(required=True)
-	group.add_argument('-t', '--task', action='store_true',
-					   help='Create a template task folder')
-	group.add_argument('-w', '--workflow', action='store_true',
-					   help='Create a template workflow folder')
-	parser.add_argument('folder_name', type=new_folder,
+	parser.add_argument('-n', '--num_tasks', type=int, default=1,
+					   help='Number of empty tasks to create')
+	parser.add_argument('workflow', type=new_folder,
 					    help='Name of template folder')
 	
 	args = parser.parse_args(args)
-	if args.task:
-		generate_task_folder(args.folder_name)
-	elif args.workflow:
-		generate_workflow_folder(args.folder_name)
+	generate_workflow(args.workflow, args.num_tasks)
 
 if __name__ == '__main__':
 	main()
