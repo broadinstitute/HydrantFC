@@ -77,8 +77,7 @@ def task_wdl_contents(task_num, workflow, fullname, username):
 	}}
 }}
 
-'''.format(tasknum=task_num, workflowname=workflow, fullname=fullname,
-		   username=username)
+'''
 	else:
 		contents = '''task task_{tasknum} {{
 	Boolean package
@@ -123,9 +122,9 @@ def task_wdl_contents(task_num, workflow, fullname, username):
 	}}
 }}
 
-'''.format(tasknum=task_num, workflowname=workflow, fullname=fullname,
-		   username=username)
-	return contents
+'''
+	return contents.format(tasknum=task_num, workflowname=workflow,
+						   fullname=fullname, username=username)
 
 def workflow_wdl_contents(workflow_name, num_tasks):
 	pwuid = pwd.getpwuid(os.getuid())
