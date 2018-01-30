@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 '''
 Classes to assist in basic WDL parsing:
     Task: Holds single WDL task and basic information about it
@@ -53,16 +55,17 @@ class WDL(object):
                 if line.startswith('task'):
                     if task is not None:
                         task = Task(task)
-                        self.tasks[task.name] = task
+                        self._tasks[task.name] = task
                     task = line
                 elif line.startswith('workflow'):
-                    self.workflow = line
+                    self._workflow = line
                     if task is not None:
-                        self.tasks.append(Task(task))
-                elif self.workflow is None:
+                        task = Task(task)
+                        self._tasks[task.name] = task
+                elif self._workflow is None:
                     task += line
                 else:
-                    self.workflow += line
+                    self._workflow += line
 
     @property
     def tasks(self):
