@@ -6,6 +6,13 @@ import docker
 from argparse import ArgumentParser
 
 def main(args=None):
+    tag=None
+    if os.path.isfile('VERSION'):
+        with open('VERSION') as version:
+            for count, line in enumerate(version):
+                tag = line.strip()
+            if count > 0:
+                raise ValueError('VERSION file should only contain 1 line')
     parser = ArgumentParser(description="Build docker image")
     if __name__ != '__main__':
         parser.prog += " " + __name__.rsplit('.', 1)[-1]
@@ -17,7 +24,7 @@ def main(args=None):
                         default=os.path.basename(os.getcwd()),
                         help='Repository name (default: %(default)s)')
     parser.add_argument('-t', '--tag', help="Version of the image or task " + \
-                        "(default: latest)")
+                        "(default: {})".format(tag or "latest"), default=tag)
     
     args = parser.parse_args(args)
     

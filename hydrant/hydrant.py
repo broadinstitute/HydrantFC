@@ -43,7 +43,13 @@ def validate(config, wdl, inputs_json='tests/inputs.json'):
             os.rename(inputs_json, inputs_json_bak)
         with open(inputs_json, 'w') as inputs:
             logging.info('Writing %s', inputs_json)
-            inputs.write(check_output(['java', '-jar', WDLTOOL, 'inputs', wdl]))
+            input_data = check_output(['java', '-jar', WDLTOOL, 'inputs', wdl],
+                                      universal_newlines=True).strip().split('\n')
+            # Sort inputs with workflow inputs first, then task inputs 
+            input_data[1:-1] = sorted(input_data[1:-1],
+                                      key=lambda x: "{}{}".format(x.split(':')[0].count('.'), x))
+            for datum in input_data:
+                inputs.write(datum + '\n')
     except:
         if inputs_json_bak is not None:
             os.rename(inputs_json_bak, inputs_json)
@@ -67,9 +73,9 @@ def main(args=None):
     defaults = Config(
         HYDRANTBIN = os.path.expanduser(os.path.join("~", ".hydrant")),
         CROMWELL_RELEASE = "https://github.com/broadinstitute/cromwell/" +
-                           "releases/download/29/cromwell-29.jar",
-        WDLTOOL_RELEASE  = "https://github.com/broadinstitute/wdltool/" +
-                           "releases/download/0.14/wdltool-0.14.jar",
+                           "releases/download/30.2/cromwell-30.2.jar",
+        WDLTOOL_RELEASE  = "https://github.com/broadinstitute/cromwell/" +
+                           "releases/download/30.2/womtool-30.2.jar",
         UTILS            = resource_filename(__name__, 'util')
         )
     
