@@ -1,13 +1,11 @@
 import os
 from setuptools import setup, find_packages
-from hydrant.__about__ import __version__
 _README           = os.path.join(os.path.dirname(__file__), 'README.rst')
 _LONG_DESCRIPTION = open(_README).read()
 
 # Setup information
 setup(
     name = 'hydrant',
-    version = __version__,
     packages = find_packages(),
     description = 'Hydrant: A tool for installing workflows into FireCloud',
     author = 'Broad Institute CGA Genome Data Analysis Center',
@@ -21,6 +19,8 @@ setup(
         ]
     },
     package_data = {'hydrant': ['util/options.json', 'util/runcromw.sh']},
+    use_scm_version=True,
+    setup_requires=['setuptools_scm'],
     test_suite = 'nose.collector',
     tests_require = ['nose'],
     install_requires = [

@@ -6,7 +6,7 @@ import sys
 import logging
 from subprocess import check_call, check_output
 from argparse import ArgumentParser
-from pkg_resources import resource_filename
+from pkg_resources import resource_filename, get_distribution
 
 from collections import namedtuple
 from six.moves.urllib.request import urlretrieve
@@ -15,7 +15,6 @@ from init import main as init
 from build import main as build
 from publish import main as publish
 from install import main as install
-from __about__ import __version__
 
 Config = namedtuple('Config',
                     'HYDRANTBIN CROMWELL_RELEASE WDLTOOL_RELEASE UTILS')
@@ -82,7 +81,8 @@ def main(args=None):
     parser = ArgumentParser(description="Hydrant: A tool for installing " +
                                         "workflows into FireCloud")
     parser.add_argument('-V', '--version', action='version',
-                        version='%(prog)s ' + __version__)
+                        version='%(prog)s ' +
+                        get_distribution(__name__.split('.', 1)[0]).version)
     subparsers = parser.add_subparsers(dest='subcmd')
     subparsers.add_parser('init', help="Create a directory tree under the " +
                           "current one with structure and templates to " +
