@@ -13,8 +13,10 @@ from six.moves.urllib.request import urlretrieve
 
 from init import main as init
 from build import main as build
-from publish import main as publish
+from push import main as push
 from install import main as install
+
+__version__ = "TESTING"
 
 Config = namedtuple('Config',
                     'HYDRANTBIN CROMWELL_RELEASE WDLTOOL_RELEASE UTILS')
@@ -81,17 +83,19 @@ def main(args=None):
     parser = ArgumentParser(description="Hydrant: A tool for installing " +
                                         "workflows into FireCloud")
     parser.add_argument('-V', '--version', action='version',
-                        version='%(prog)s ' +
-                        get_distribution(__name__.split('.', 1)[0]).version)
+                        version='%(prog)s ' + __version__)
     subparsers = parser.add_subparsers(dest='subcmd')
     subparsers.add_parser('init', help="Create a directory tree under the " +
                           "current one with structure and templates to " +
                           "facilitate building a FireCloud workflow or a " +
                           "docker image for use in one", add_help=False)
-    subparsers.add_parser('build', help="Build the docker image defined in " +
-                          "the local Dockerfile", add_help=False)
-    subparsers.add_parser('publish', help="Push the docker image to dockerhub",
-                          add_help=False)
+    dockerparser = subparsers.add_parser('docker', help='''Docker commands and
+                                         convenience utilities''')
+    dockercommand = dockerparser.add_subparsers(dest='dockercmd')
+    dockercommand.add_parser('build', help="Build the docker image defined " +
+                             "in the local Dockerfile", add_help=False)
+    dockercommand.add_parser('push', help="Push the docker image to dockerhub",
+                             add_help=False)
     subparsers.add_parser('sync', help="Update the WDLs of all local " +
                           "workflows using this docker image to the latest " +
                           "version")
@@ -105,23 +109,26 @@ def main(args=None):
     subparsers.add_parser('config', help="Update workspace task configs " +
                           "with the latest snapshot you have committed")
     
-    args, opts = parser.parse_known_args(args)
+    args, argv = parser.parse_known_args(args)
     
     # TODO: Build a dict of hydrant arguments with values being the function to
     #       call, it will make the below a lot cleaner.
     wdl = os.path.basename(os.getcwd()) + ".wdl"
     if args.subcmd == 'init':
-        init(opts)
+        init(argv)
     elif args.subcmd == 'validate':
         validate(defaults, wdl)
     elif args.subcmd == 'test':
         test(defaults, wdl)
     elif args.subcmd == 'install':
-        install(opts)
-    elif args.subcmd == 'build':
-        build(opts)
-    elif args.subcmd == 'publish':
-        publish(opts)
+        install(argv)
+    elif args.subcmd == 'docker':
+        if args.dockercmd == 'build':
+            build(argv)
+        elif args.dockercmd == 'push':
+            push(argv)
     
 if __name__ == '__main__':
     main()
+else:
+    __version__ = get_distribution(__name__.split('.', 1)[0]).version

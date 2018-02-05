@@ -72,7 +72,7 @@ def generate_task(task):
 
 def task_wdl_contents(task_num, workflow, fullname, username):
     if task_num == 1:
-        contents = '''task task_{tasknum} {{
+        contents = '''task {workflowname}_task_{tasknum} {{
     Boolean package
     String null_file
     String package_name
@@ -103,7 +103,7 @@ def task_wdl_contents(task_num, workflow, fullname, username):
     }}
 
     runtime {{
-        docker : "broadgdac/task_{tasknum}:1"
+        docker : "broadgdac/{workflowname}_task_{tasknum}:1"
         disks : "local-disk ${{if defined(local_disk_gb) then local_disk_gb else '10'}} HDD"
         preemptible : "${{if defined(num_preemptions) then num_preemptions else '0'}}"
     }}
@@ -116,7 +116,7 @@ def task_wdl_contents(task_num, workflow, fullname, username):
 
 '''
     else:
-        contents = '''task task_{tasknum} {{
+        contents = '''task {workflowname}_task_{tasknum} {{
     Boolean package
     String null_file
     File package_archive
@@ -148,7 +148,7 @@ def task_wdl_contents(task_num, workflow, fullname, username):
     }}
 
     runtime {{
-        docker : "broadgdac/task_{tasknum}:1"
+        docker : "broadgdac/{workflowname}_task_{tasknum}:1"
         disks : "local-disk ${{if defined(local_disk_gb) then local_disk_gb else '10'}} HDD"
         preemptible : "${{if defined(num_preemptions) then num_preemptions else '0'}}"
     }}
@@ -179,24 +179,24 @@ def workflow_wdl_contents(workflow_name, num_tasks, user_tasks):
         if task == 1:
             workflow += '''
 
-    call task_1 {
+    call {workflowname}_task_1 {
         input: package=package,
                null_file=null_file,
                package_name=package_name
-    }'''
+    }'''.format(workflowname=workflow_name)
         else:
             workflow += '''
 
-    call task_{tasknum} {{
+    call {workflowname}_task_{tasknum} {{
         input: package=package,
                null_file=null_file,
-               package_archive=task_{prevtask}.{workflowname}_pkg
+               package_archive={workflowname}_task_{prevtask}.{workflowname}_pkg
     }}'''.format(tasknum=task, prevtask=task - 1, workflowname=workflow_name)
         if task == num_tasks:
             workflow += '''
 
     output {{
-        task_{tasknum}.{workflowname}_pkg
+        {workflowname}_task_{tasknum}.{workflowname}_pkg
     }}
 }}
 '''.format(tasknum=task, workflowname=workflow_name)
@@ -237,7 +237,8 @@ def generate_workflow(workflow, num_tasks, user_tasks):
     # Make new folders
     # task folders
     for task in range(1, num_tasks + 1):
-        task_folder = os.path.join(workflow, 'task_%d' % task)
+        task_folder = os.path.join(workflow,
+                                   '{}_task_{}'.format(workflow, task))
         generate_task(task_folder)
     
     # test folder
