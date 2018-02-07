@@ -21,6 +21,9 @@ __version__ = "TESTING"
 Config = namedtuple('Config',
                     'HYDRANTBIN CROMWELL_RELEASE WDLTOOL_RELEASE UTILS')
 
+def load_config(config):
+    pass
+
 def validate_util(hydrantbin, url, name):
     local = os.path.join(hydrantbin, url.rsplit('/', 1)[-1])
     if not os.path.exists(hydrantbin):

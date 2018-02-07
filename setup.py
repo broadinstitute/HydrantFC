@@ -25,7 +25,7 @@ setup(
     tests_require = ['nose'],
     install_requires = [
         'firecloud',
-        'docker',
+        'docker[tls]>=3.0.1',
         'six'
     ],
     classifiers = [
