@@ -78,7 +78,7 @@ def docker_login(kwargs):
 def main(args=None):
     parser = ArgumentParser(description="Publish docker image")
     if __name__ != '__main__':
-        parser.prog += " " + __name__.rsplit('.', 1)[-1]
+        parser.prog += " docker " + __name__.rsplit('.', 1)[-1]
         
     repo = os.path.basename(os.getcwd())
     

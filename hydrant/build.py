@@ -62,7 +62,7 @@ def main(args=None):
         
     parser = ArgumentParser(description="Build docker image")
     if __name__ != '__main__':
-        parser.prog += " " + __name__.rsplit('.', 1)[-1]
+        parser.prog += " docker " + __name__.rsplit('.', 1)[-1]
     parser.add_argument('-R', '--registry',
                         help="Host[:port] of registry if not at Docker Hub")
     parser.add_argument('-n', '--namespace', required=True,
