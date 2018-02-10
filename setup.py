@@ -12,7 +12,7 @@ setup(
     author_email = 'gdac@broadinstitute.org',
     long_description = _LONG_DESCRIPTION,
     license = "BSD 3-Clause License",
-    url = 'https://github.com/broadinstitute/HydrantFC',\
+    url = 'https://github.com/broadinstitute/HydrantFC',
     entry_points = {
         'console_scripts': [
             'hydrant = hydrant.hydrant:main'
