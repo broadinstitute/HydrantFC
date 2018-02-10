@@ -4,41 +4,60 @@
 import os
 import sys
 import logging
+from shutil import copy2 as cp
 from subprocess import check_call, check_output
+from pkg_resources import get_distribution
 from argparse import ArgumentParser
-from pkg_resources import resource_filename, get_distribution
-
-from collections import namedtuple
 from six.moves.urllib.request import urlretrieve
 
 from init import main as init
 from build import main as build
 from push import main as push
 from install import main as install
+from util import help_if_no_args, BASECONFIG
+
+from ConfigLoader import ConfigLoader
 
 __version__ = "TESTING"
-
-Config = namedtuple('Config',
-                    'HYDRANTBIN CROMWELL_RELEASE WDLTOOL_RELEASE UTILS')
 
 def load_config(config):
     pass
 
-def validate_util(hydrantbin, url, name):
-    local = os.path.join(hydrantbin, url.rsplit('/', 1)[-1])
-    if not os.path.exists(hydrantbin):
+def first_run():
+    logging.info("First run of hydrant, creating %s", BASECONFIG.USERDIR)  # @UndefinedVariable
+    os.mkdir(BASECONFIG.USERDIR)  # @UndefinedVariable
+    copy_cfg()
+
+def copy_cfg():
+    indent = " " * 30
+    user_cfg = os.path.join(BASECONFIG.DEFAULTS, 'user.cfg')  # @UndefinedVariable
+    hydrant_cfg = os.path.join(BASECONFIG.USERDIR, 'hydrant.cfg')  # @UndefinedVariable
+    logging.info('Generating initial hydrant.cfg')
+    cp(user_cfg, hydrant_cfg)
+    logging.info("%s added. You may edit using INI file structure and basic " +
+                 "interpolation as defined here:\n%s%s\n%sWorkspaces list " +
+                 "may be defined with commas (Workspaces=ws1,ws2,ws3).",
+                 hydrant_cfg, indent + "    ",
+                 "https://docs.python.org/3/library/configparser.html" +
+                 "#supported-ini-file-structure", indent)
+    
+    
+
+def validate_util(url, name):
+    local = os.path.join(BASECONFIG.USERDIR, url.rsplit('/', 1)[-1])  # @UndefinedVariable
+    if not os.path.exists(BASECONFIG.USERDIR):  # @UndefinedVariable
         logging.warn("No path found for hydrant utilities, creating %s",
-                     hydrantbin)
-        os.mkdir(hydrantbin)
+                     BASECONFIG.USERDIR)  # @UndefinedVariable
+        os.mkdir(BASECONFIG.USERDIR)  # @UndefinedVariable
     if not os.path.exists(local):
         logging.warn("%s not found. Downloading from %s to %s.",
                      name, url, local)
         urlretrieve(url, local)
     return local
 
-def validate(config, wdl, inputs_json='tests/inputs.json'):
-    WDLTOOL = validate_util(config.HYDRANTBIN, config.WDLTOOL_RELEASE,
-                            "wdltool")
+def validate(wdl, inputs_json='tests/inputs.json'):
+    config = ConfigLoader().config['All']
+    WDLTOOL = validate_util(BASECONFIG.USERDIR, config['WDLtool'], "wdltool")  # @UndefinedVariable
     inputs_json_bak = None
     try:
         check_call(['java', '-jar', WDLTOOL, 'validate', wdl])
@@ -60,9 +79,10 @@ def validate(config, wdl, inputs_json='tests/inputs.json'):
         logging.exception("Unable to validate %s", wdl)
         sys.exit(1)
 
-def test(config, wdl, inputs_json='tests/inputs.json'):
-    runcromw = os.path.join(config.UTILS, 'runcromw.sh')
-    CROMWELL = validate_util(config.HYDRANTBIN, config.CROMWELL_RELEASE,
+def test(wdl, inputs_json='tests/inputs.json'):
+    config = ConfigLoader().config['All']
+    runcromw = os.path.join(BASECONFIG.UTILS, 'runcromw.sh')  # @UndefinedVariable
+    CROMWELL = validate_util(BASECONFIG.USERDIR, config['Cromwell'],  # @UndefinedVariable
                              "Command-line cromwell")
     try:
         check_call([runcromw, CROMWELL, wdl, inputs_json])
@@ -74,14 +94,6 @@ def config():
     pass
 
 def main(args=None):
-    defaults = Config(
-        HYDRANTBIN = os.path.expanduser(os.path.join("~", ".hydrant")),
-        CROMWELL_RELEASE = "https://github.com/broadinstitute/cromwell/" +
-                           "releases/download/30.2/cromwell-30.2.jar",
-        WDLTOOL_RELEASE  = "https://github.com/broadinstitute/cromwell/" +
-                           "releases/download/30.2/womtool-30.2.jar",
-        UTILS            = resource_filename(__name__, 'util')
-        )
     
     parser = ArgumentParser(description="Hydrant: A tool for installing " +
                                         "workflows into FireCloud")
@@ -112,7 +124,14 @@ def main(args=None):
     subparsers.add_parser('config', help="Update workspace task configs " +
                           "with the latest snapshot you have committed")
     
+    args = help_if_no_args(parser, args)
+    
     args, argv = parser.parse_known_args(args)
+    
+    if not os.path.isdir(BASECONFIG.USERDIR):  # @UndefinedVariable
+        first_run()
+    if not os.path.isfile(os.path.join(BASECONFIG.USERDIR, 'hydrant.cfg')):  # @UndefinedVariable
+        copy_cfg()
     
     # TODO: Build a dict of hydrant arguments with values being the function to
     #       call, it will make the below a lot cleaner.
@@ -120,9 +139,9 @@ def main(args=None):
     if args.subcmd == 'init':
         init(argv)
     elif args.subcmd == 'validate':
-        validate(defaults, wdl)
+        validate(wdl)
     elif args.subcmd == 'test':
-        test(defaults, wdl)
+        test(wdl)
     elif args.subcmd == 'install':
         install(argv)
     elif args.subcmd == 'docker':

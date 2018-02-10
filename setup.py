@@ -18,7 +18,8 @@ setup(
             'hydrant = hydrant.hydrant:main'
         ]
     },
-    package_data = {'hydrant': ['util/options.json', 'util/runcromw.sh']},
+    package_data = {'hydrant': ['util/options.json', 'util/runcromw.sh',
+                                'defaults/*.cfg']},
     use_scm_version=True,
     setup_requires=['setuptools_scm'],
     test_suite = 'nose.collector',

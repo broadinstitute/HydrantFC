@@ -9,6 +9,7 @@ import json
 from six.moves import input
 from getpass import getpass
 from argparse import ArgumentParser
+from util import help_if_no_args, get_version
 
 def find_registry_namespace(client, repo, error_on_fail=False):
     repo_images = [tag for image in client.images.list() \
@@ -25,17 +26,6 @@ def find_registry_namespace(client, repo, error_on_fail=False):
         raise ValueError("Found {} namespaces for {}, was expecting 1.".format(
                          len(namespaces), repo))
     return registry, None
-
-def get_version(path):
-    tag=None
-    version_file = os.path.join(path, 'VERSION')
-    if os.path.isfile(version_file):
-        with open(version_file) as version:
-            for count, line in enumerate(version):
-                tag = line.strip()
-            if count > 0:
-                raise ValueError('VERSION file should only contain 1 line')
-    return tag
 
 def add_default_arg(arg, kwargs):
     kwargs['default'] = arg
@@ -110,6 +100,7 @@ def main(args=None):
     parser.add_argument('-t', '--tag', help="Version of the image or task " + \
                         "(default: {})".format(tag or 'latest'), default=tag)
     
+    args = help_if_no_args(parser, args)
     args = parser.parse_args(args)
     
     repo = args.namespace + '/' + args.repository

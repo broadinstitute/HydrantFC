@@ -7,17 +7,7 @@ import docker
 import logging
 import json
 from argparse import ArgumentParser
-
-def get_version(path):
-    tag='latest'
-    version_file = os.path.join(path, 'VERSION')
-    if os.path.isfile(version_file):
-        with open(version_file) as version:
-            for count, line in enumerate(version):
-                tag = line.strip()
-            if count > 0:
-                raise ValueError('VERSION file should only contain 1 line')
-    return tag
+from util import help_if_no_args, docker_repos
 
 def get_full_tag(reg, namespc, repo, tag=None):
     full_tag = namespc + '/' + repo
@@ -39,26 +29,25 @@ def build_image(name, client, path, tag):
         sys.exit(1)
         
 def main(args=None):
-    repos = {}
-    cwd = os.getcwd()
-    for root, dirs, files in os.walk(cwd):
-        # Don't descend more than 1 level
-        if root.replace(cwd, '', 1).count(os.path.sep) == 1:
-            del dirs[:]
-        if 'Dockerfile' in files:
-            repos[root] = get_version(root)
-            del dirs[:] # no need to descend further
+    repos = {repo: version for repo, version in docker_repos()}
     repo_kwargs = {'help': 'Repository name[:tag]'}
-    if len(repos) == 1 and cwd in repos:
-        repo_kwargs['help'] += ' (default: %(default)s)'
-        repo_kwargs['default'] = os.path.basename(cwd) + ':' + repos[cwd]
-    elif len(repos) > 0:
+    # TODO: Allow arbitrary repo names and uncomment below code. For now repo
+    #       names must match task folder names.
+#     if len(repos) == 1 and cwd in repos:
+#         repo_kwargs['help'] += ' (default: %(default)s)'
+#         repo_kwargs['default'] = os.path.basename(cwd) + ':' + repos[cwd]
+    if len(repos) > 0:
         repo_kwargs['choices'] = sorted(os.path.basename(repo) + ':' + version
                                         for repo, version in repos.items())
-        repo_kwargs['nargs'] = '*'
+        if len(repos) > 1:
+            repo_kwargs['nargs'] = '*'
+        else:
+            repo_kwargs['nargs'] = '?'
+            repo_kwargs['metavar'] = repo_kwargs['choices'][0]
+            repo_kwargs['const'] = repo_kwargs['metavar']
     else:
-        repo_kwargs['help'] += ''', requires VERSION file if building multiple
-                                  images with tags other than "latest"'''
+        repo_kwargs['help'] += ''', requires hydrant.cfg file if building
+                               multiple images with tags other than "latest"'''
         
     parser = ArgumentParser(description="Build docker image")
     if __name__ != '__main__':
@@ -71,6 +60,7 @@ def main(args=None):
     parser.add_argument('-a', '--all', action='store_true',
                         help="Build all docker images.")
     
+    args = help_if_no_args(parser, args)
     args = parser.parse_args(args)
     
     client = docker.from_env()

@@ -8,6 +8,9 @@ import pwd
 from argparse import ArgumentParser, ArgumentTypeError
 from WDL import WDL
 from collections import namedtuple
+from shutil import copy2 as cp
+from util import help_if_no_args, BASECONFIG
+from ConfigLoader import ConfigLoader
 
 UserTaskList = namedtuple('UserTaskList', 'flow tasks')
 
@@ -16,6 +19,8 @@ def new_folder(folder_name):
         raise ArgumentTypeError("{} already exists".format(folder_name))
     else:
         os.mkdir(folder_name)
+        cp(os.path.join(BASECONFIG.DEFAULTS, 'workflow.cfg'),  # @UndefinedVariable
+           os.path.join(folder_name, 'hydrant.cfg'))
         return folder_name
 
 def user_task(flow_task):
@@ -53,7 +58,15 @@ def process_user_tasks(user_tasks, new_flow):
 
 def generate_task(task):
     ##Make new folders
-    os.makedirs(os.path.join(task, "src"))
+    srcdir = os.path.join(task, "src")
+    os.makedirs(srcdir)
+    
+    ##Copy default config
+    cp(os.path.join(BASECONFIG.DEFAULTS, 'task.cfg'),  # @UndefinedVariable
+       os.path.join(task, 'hydrant.cfg'))
+    
+    ##Copy packaging utility
+    cp(os.path.join(BASECONFIG.UTILS, 'package.sh'), srcdir)  # @UndefinedVariable
 
     ##Paths for contents
     version_path = os.path.join(task, "VERSION")
@@ -71,6 +84,7 @@ def generate_task(task):
         di.write(dockerignore_contents())
 
 def task_wdl_contents(task_num, workflow, fullname, username):
+    namespace = ConfigLoader().config.Docker.Namespace
     if task_num == 1:
         contents = '''task {workflowname}_task_{tasknum} {{
     Boolean package
@@ -88,12 +102,7 @@ def task_wdl_contents(task_num, workflow, fullname, username):
         #**Command goes here**
 
         if ${{package}}; then
-            zip -r ${{package_name}} . -x \\
-                "fc-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]-[a-f0-9][a-f0-9][a-f0-9][a-f0-9]-[a-f0-9][a-f0-9][a-f0-9][a-f0-9]-[a-f0-9][a-f0-9][a-f0-9][a-f0-9]-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]/*" \\
-                lost+found/\* \\
-                broad-institute-gdac/\* \\
-                "tmp.[a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9]/*" \\
-                exec.sh
+            /src/package.sh -x broad-institute-gdac/\* ${{package_name}}
         fi
     }}
 
@@ -103,7 +112,7 @@ def task_wdl_contents(task_num, workflow, fullname, username):
     }}
 
     runtime {{
-        docker : "broadgdac/{workflowname}_task_{tasknum}:1"
+        docker : "{namespace}/{workflowname}_task_{tasknum}:1"
         disks : "local-disk ${{if defined(local_disk_gb) then local_disk_gb else '10'}} HDD"
         preemptible : "${{if defined(num_preemptions) then num_preemptions else '0'}}"
     }}
@@ -133,12 +142,7 @@ def task_wdl_contents(task_num, workflow, fullname, username):
 
         if ${{package}}; then
             mv ${{package_archive}} .
-            zip -r ${{package_name}} . -x \\
-                "fc-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]-[a-f0-9][a-f0-9][a-f0-9][a-f0-9]-[a-f0-9][a-f0-9][a-f0-9][a-f0-9]-[a-f0-9][a-f0-9][a-f0-9][a-f0-9]-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]/*" \\
-                lost+found/\* \\
-                broad-institute-gdac/\* \\
-                "tmp.[a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9]/*" \\
-                exec.sh
+            /src/package.sh -x broad-institute-gdac/\* ${{package_name}}
         fi
     }}
 
@@ -148,7 +152,7 @@ def task_wdl_contents(task_num, workflow, fullname, username):
     }}
 
     runtime {{
-        docker : "broadgdac/{workflowname}_task_{tasknum}:1"
+        docker : "{namespace}/{workflowname}_task_{tasknum}:1"
         disks : "local-disk ${{if defined(local_disk_gb) then local_disk_gb else '10'}} HDD"
         preemptible : "${{if defined(num_preemptions) then num_preemptions else '0'}}"
     }}
@@ -161,7 +165,8 @@ def task_wdl_contents(task_num, workflow, fullname, username):
 
 '''
     return contents.format(tasknum=task_num, workflowname=workflow,
-                           fullname=fullname, username=username)
+                           fullname=fullname, username=username,
+                           namespace=namespace or 'broadgdac')
 
 def workflow_wdl_contents(workflow_name, num_tasks, user_tasks):
     pwuid = pwd.getpwuid(os.getuid())
@@ -179,11 +184,11 @@ def workflow_wdl_contents(workflow_name, num_tasks, user_tasks):
         if task == 1:
             workflow += '''
 
-    call {workflowname}_task_1 {
+    call {workflowname}_task_1 {{
         input: package=package,
                null_file=null_file,
                package_name=package_name
-    }'''.format(workflowname=workflow_name)
+    }}'''.format(workflowname=workflow_name)
         else:
             workflow += '''
 
@@ -263,6 +268,7 @@ def main(args=None):
                              '<workflow>.<task|*>, with "<workflow>.*" ' +
                              'indicating all tasks in <workflow>')
     
+    args = help_if_no_args(parser, args)
     args = parser.parse_args(args)
     user_tasks = process_user_tasks(args.task, args.workflow)
     generate_workflow(args.workflow, args.num_tasks, user_tasks)

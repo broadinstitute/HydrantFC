@@ -5,6 +5,7 @@ import os
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, ArgumentTypeError
 from firecloud.fiss import meth_new
 from firecloud.fccore import __fcconfig as fcconfig
+from util import help_if_no_args
 
 def ValidFile(filename):
     if not os.path.isfile(filename):
@@ -41,6 +42,7 @@ def main(args=None):
                         help='Optional comment specific to this snapshot',
                         default='')
     
+    args = help_if_no_args(parser, args)
     args = parser.parse_args(args)
     
     meth_new(args)
