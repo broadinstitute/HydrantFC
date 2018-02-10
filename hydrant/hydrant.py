@@ -56,8 +56,8 @@ def validate_util(url, name):
     return local
 
 def validate(wdl, inputs_json='tests/inputs.json'):
-    config = ConfigLoader().config['All']
-    WDLTOOL = validate_util(FIXEDPATHS.USERDIR, config['WDLtool'], "wdltool")  # @UndefinedVariable
+    config = ConfigLoader().config.All
+    WDLTOOL = validate_util(config.WDLtool, "wdltool")
     inputs_json_bak = None
     try:
         check_call(['java', '-jar', WDLTOOL, 'validate', wdl])
@@ -80,10 +80,9 @@ def validate(wdl, inputs_json='tests/inputs.json'):
         sys.exit(1)
 
 def test(wdl, inputs_json='tests/inputs.json'):
-    config = ConfigLoader().config['All']
+    config = ConfigLoader().config.All
     runcromw = os.path.join(FIXEDPATHS.UTILS, 'runcromw.sh')  # @UndefinedVariable
-    CROMWELL = validate_util(FIXEDPATHS.USERDIR, config['Cromwell'],  # @UndefinedVariable
-                             "Command-line cromwell")
+    CROMWELL = validate_util(config.Cromwell, "Command-line cromwell")
     try:
         check_call([runcromw, CROMWELL, wdl, inputs_json])
     except:
