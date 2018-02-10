@@ -18,8 +18,7 @@ setup(
             'hydrant = hydrant.hydrant:main'
         ]
     },
-    package_data = {'hydrant': ['util/options.json', 'util/runcromw.sh',
-                                'defaults/*.cfg']},
+    package_data = {'hydrant': ['util/*', 'defaults/*.cfg']},
     use_scm_version=True,
     setup_requires=['setuptools_scm'],
     test_suite = 'nose.collector',
@@ -30,6 +29,7 @@ setup(
         'six'
     ],
     classifiers = [
+        "Development Status :: 3 - Alpha",
         "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3",
         "Intended Audience :: Science/Research",
