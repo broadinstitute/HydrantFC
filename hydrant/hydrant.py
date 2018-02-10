@@ -14,7 +14,7 @@ from init import main as init
 from build import main as build
 from push import main as push
 from install import main as install
-from util import help_if_no_args, BASECONFIG
+from util import help_if_no_args, FIXEDPATHS
 
 from ConfigLoader import ConfigLoader
 
@@ -24,14 +24,14 @@ def load_config(config):
     pass
 
 def first_run():
-    logging.info("First run of hydrant, creating %s", BASECONFIG.USERDIR)  # @UndefinedVariable
-    os.mkdir(BASECONFIG.USERDIR)  # @UndefinedVariable
+    logging.info("First run of hydrant, creating %s", FIXEDPATHS.USERDIR)  # @UndefinedVariable
+    os.mkdir(FIXEDPATHS.USERDIR)  # @UndefinedVariable
     copy_cfg()
 
 def copy_cfg():
     indent = " " * 30
-    user_cfg = os.path.join(BASECONFIG.DEFAULTS, 'user.cfg')  # @UndefinedVariable
-    hydrant_cfg = os.path.join(BASECONFIG.USERDIR, 'hydrant.cfg')  # @UndefinedVariable
+    user_cfg = os.path.join(FIXEDPATHS.DEFAULTS, 'user.cfg')  # @UndefinedVariable
+    hydrant_cfg = os.path.join(FIXEDPATHS.USERDIR, 'hydrant.cfg')  # @UndefinedVariable
     logging.info('Generating initial hydrant.cfg')
     cp(user_cfg, hydrant_cfg)
     logging.info("%s added. You may edit using INI file structure and basic " +
@@ -44,11 +44,11 @@ def copy_cfg():
     
 
 def validate_util(url, name):
-    local = os.path.join(BASECONFIG.USERDIR, url.rsplit('/', 1)[-1])  # @UndefinedVariable
-    if not os.path.exists(BASECONFIG.USERDIR):  # @UndefinedVariable
+    local = os.path.join(FIXEDPATHS.USERDIR, url.rsplit('/', 1)[-1])  # @UndefinedVariable
+    if not os.path.exists(FIXEDPATHS.USERDIR):  # @UndefinedVariable
         logging.warn("No path found for hydrant utilities, creating %s",
-                     BASECONFIG.USERDIR)  # @UndefinedVariable
-        os.mkdir(BASECONFIG.USERDIR)  # @UndefinedVariable
+                     FIXEDPATHS.USERDIR)  # @UndefinedVariable
+        os.mkdir(FIXEDPATHS.USERDIR)  # @UndefinedVariable
     if not os.path.exists(local):
         logging.warn("%s not found. Downloading from %s to %s.",
                      name, url, local)
@@ -57,7 +57,7 @@ def validate_util(url, name):
 
 def validate(wdl, inputs_json='tests/inputs.json'):
     config = ConfigLoader().config['All']
-    WDLTOOL = validate_util(BASECONFIG.USERDIR, config['WDLtool'], "wdltool")  # @UndefinedVariable
+    WDLTOOL = validate_util(FIXEDPATHS.USERDIR, config['WDLtool'], "wdltool")  # @UndefinedVariable
     inputs_json_bak = None
     try:
         check_call(['java', '-jar', WDLTOOL, 'validate', wdl])
@@ -81,8 +81,8 @@ def validate(wdl, inputs_json='tests/inputs.json'):
 
 def test(wdl, inputs_json='tests/inputs.json'):
     config = ConfigLoader().config['All']
-    runcromw = os.path.join(BASECONFIG.UTILS, 'runcromw.sh')  # @UndefinedVariable
-    CROMWELL = validate_util(BASECONFIG.USERDIR, config['Cromwell'],  # @UndefinedVariable
+    runcromw = os.path.join(FIXEDPATHS.UTILS, 'runcromw.sh')  # @UndefinedVariable
+    CROMWELL = validate_util(FIXEDPATHS.USERDIR, config['Cromwell'],  # @UndefinedVariable
                              "Command-line cromwell")
     try:
         check_call([runcromw, CROMWELL, wdl, inputs_json])
@@ -128,9 +128,9 @@ def main(args=None):
     
     args, argv = parser.parse_known_args(args)
     
-    if not os.path.isdir(BASECONFIG.USERDIR):  # @UndefinedVariable
+    if not os.path.isdir(FIXEDPATHS.USERDIR):  # @UndefinedVariable
         first_run()
-    if not os.path.isfile(os.path.join(BASECONFIG.USERDIR, 'hydrant.cfg')):  # @UndefinedVariable
+    if not os.path.isfile(os.path.join(FIXEDPATHS.USERDIR, 'hydrant.cfg')):  # @UndefinedVariable
         copy_cfg()
     
     # TODO: Build a dict of hydrant arguments with values being the function to

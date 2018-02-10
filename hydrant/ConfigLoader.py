@@ -3,7 +3,7 @@
 import sys
 import os
 
-from util import BASECONFIG
+from util import FIXEDPATHS
 from collections import namedtuple
 
 # SafeConfigParser was renamed to ConfigParser in Python 3.2, and the use of
@@ -33,7 +33,7 @@ class ConfigLoader(object):
         '''
         self._config = SafeConfigParser(allow_no_value=True)
         self._config.optionxform = str
-        user_cfg = os.path.join(BASECONFIG.USERDIR, 'hydrant.cfg')  # @UndefinedVariable
+        user_cfg = os.path.join(FIXEDPATHS.USERDIR, 'hydrant.cfg')  # @UndefinedVariable
         with open(user_cfg) as default_cfg:
             if PY32:
                 self._config.read_file(self.readline_generator(default_cfg))
@@ -69,7 +69,9 @@ class ConfigLoader(object):
     
     def _get_items(self, section):
         for key, value in self._config.items(section):
-            if ',' in value: # Convert comma-separated fields to arrays
+            if value == '':
+                value = None
+            elif ',' in value: # Convert comma-separated fields to arrays
                 value = [field.strip() for field in value.split(',')]
             yield key, value
     

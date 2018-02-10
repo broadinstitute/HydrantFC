@@ -9,7 +9,7 @@ from argparse import ArgumentParser, ArgumentTypeError
 from WDL import WDL
 from collections import namedtuple
 from shutil import copy2 as cp
-from util import help_if_no_args, BASECONFIG
+from util import help_if_no_args, FIXEDPATHS
 from ConfigLoader import ConfigLoader
 
 UserTaskList = namedtuple('UserTaskList', 'flow tasks')
@@ -19,7 +19,7 @@ def new_folder(folder_name):
         raise ArgumentTypeError("{} already exists".format(folder_name))
     else:
         os.mkdir(folder_name)
-        cp(os.path.join(BASECONFIG.DEFAULTS, 'workflow.cfg'),  # @UndefinedVariable
+        cp(os.path.join(FIXEDPATHS.DEFAULTS, 'workflow.cfg'),  # @UndefinedVariable
            os.path.join(folder_name, 'hydrant.cfg'))
         return folder_name
 
@@ -62,20 +62,15 @@ def generate_task(task):
     os.makedirs(srcdir)
     
     ##Copy default config
-    cp(os.path.join(BASECONFIG.DEFAULTS, 'task.cfg'),  # @UndefinedVariable
+    cp(os.path.join(FIXEDPATHS.DEFAULTS, 'task.cfg'),  # @UndefinedVariable
        os.path.join(task, 'hydrant.cfg'))
     
     ##Copy packaging utility
-    cp(os.path.join(BASECONFIG.UTILS, 'package.sh'), srcdir)  # @UndefinedVariable
+    cp(os.path.join(FIXEDPATHS.UTILS, 'package.sh'), srcdir)  # @UndefinedVariable
 
     ##Paths for contents
-    version_path = os.path.join(task, "VERSION")
     dockerfile_path = os.path.join(task, "Dockerfile")
     dockerignore_path = os.path.join(task, ".dockerignore")
-
-    with open(version_path, 'w') as vf:
-        ##Start with version 1
-        vf.write("1\n")
 
     with open(dockerfile_path, 'w') as df:
         df.write(dockerfile_contents())

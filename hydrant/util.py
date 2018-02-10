@@ -4,13 +4,15 @@ import os
 from collections import namedtuple
 from pkg_resources import resource_filename
 
-BaseConfig = namedtuple('BaseConfig', 'USERDIR UTILS DEFAULTS')
+FixedPaths = namedtuple('FixedPaths', 'USERDIR UTILS DEFAULTS')
 
-BASECONFIG = BaseConfig(
+FIXEDPATHS = FixedPaths(
     USERDIR          = os.path.expanduser(os.path.join("~", ".hydrant")),
     UTILS            = resource_filename(__name__, 'util'),
     DEFAULTS         = resource_filename(__name__, 'defaults')
     )
+
+from ConfigLoader import ConfigLoader
 
 def help_if_no_args(parser, args):
     prefix = '-' if '-' in parser.prefix_chars else parser.prefix_chars[0]
@@ -20,16 +22,12 @@ def help_if_no_args(parser, args):
         return [prefix + 'h']
     return args
 
+def add_default_arg(arg, kwargs):
+    kwargs['default'] = arg
+    kwargs['help'] += " (default: %(default)s)"
+
 def get_version(path):
-    tag='latest'
-    version_file = os.path.join(path, 'VERSION')
-    if os.path.isfile(version_file):
-        with open(version_file) as version:
-            for count, line in enumerate(version):
-                tag = line.strip()
-            if count > 0:
-                raise ValueError('VERSION file should only contain 1 line')
-    return tag
+    return ConfigLoader(path).config.Docker.Tag or 'latest'
 
 def docker_repos(path=os.getcwd()):
     for root, dirs, files in os.walk(path):

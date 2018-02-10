@@ -7,7 +7,8 @@ import docker
 import logging
 import json
 from argparse import ArgumentParser
-from util import help_if_no_args, docker_repos
+from util import help_if_no_args, docker_repos, add_default_arg
+from ConfigLoader import ConfigLoader, SafeConfigParser
 
 def get_full_tag(reg, namespc, repo, tag=None):
     full_tag = namespc + '/' + repo
@@ -16,6 +17,15 @@ def get_full_tag(reg, namespc, repo, tag=None):
     if tag is not None:
         full_tag += ':' + tag
     return full_tag
+
+def extract_full_tag(full_tag):
+    chunks = full_tag.split('/')
+    repo, tag = chunks[-1].rsplit(':', 1)
+    namespace = chunks[-2]
+    reg = None
+    if len(chunks) == 3:
+        reg = chunks[0]
+    return reg, namespace, repo, tag
 
 def build_image(name, client, path, tag):
     try:
@@ -28,8 +38,32 @@ def build_image(name, client, path, tag):
                           "https://www.docker.com/community-edition#/download")
         sys.exit(1)
         
+    reg, namespace, _, tag = extract_full_tag(tag)
+    task_cfg = SafeConfigParser(allow_no_value=True)
+    task_cfg.add_section('Docker')
+    if reg is not None:
+        task_cfg.set('Docker', 'Registry', reg)
+    task_cfg.set('Docker', 'Namespace', namespace)
+    task_cfg.set('Docker', 'Tag', tag)
+    
+    with open(os.path.join(path, 'hydrant.cfg'), 'wb') as task_cfg_file:
+        task_cfg.write(task_cfg_file)
+        
+    
+        
 def main(args=None):
     repos = {repo: version for repo, version in docker_repos()}
+    docker_cfg = ConfigLoader().config.Docker
+    # TODO: allow multiple registries and namespaces from the workspace folder
+    #       level.
+    reg_kwargs = {'help': "Host[:port] of registry if not at Docker Hub"}
+    if docker_cfg.Registry is not None:
+        add_default_arg(docker_cfg.Registry, reg_kwargs)
+    ns_kwargs = {'help': 'Namespace under which the repository resides'}
+    if docker_cfg.Namespace is not None:
+        add_default_arg(docker_cfg.Namespace, ns_kwargs)
+    else:
+        ns_kwargs['required'] = True
     repo_kwargs = {'help': 'Repository name[:tag]'}
     # TODO: Allow arbitrary repo names and uncomment below code. For now repo
     #       names must match task folder names.
@@ -53,9 +87,8 @@ def main(args=None):
     if __name__ != '__main__':
         parser.prog += " docker " + __name__.rsplit('.', 1)[-1]
     parser.add_argument('-R', '--registry',
-                        help="Host[:port] of registry if not at Docker Hub")
-    parser.add_argument('-n', '--namespace', required=True,
-                        help='Namespace under which the repository resides')
+                        **reg_kwargs)
+    parser.add_argument('-n', '--namespace', **ns_kwargs)
     parser.add_argument('-r', '--repository', **repo_kwargs)
     parser.add_argument('-a', '--all', action='store_true',
                         help="Build all docker images.")

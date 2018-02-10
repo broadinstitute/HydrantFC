@@ -9,27 +9,26 @@ import json
 from six.moves import input
 from getpass import getpass
 from argparse import ArgumentParser
-from util import help_if_no_args, get_version
+from util import help_if_no_args, add_default_arg
+from ConfigLoader import ConfigLoader
 
-def find_registry_namespace(client, repo, error_on_fail=False):
+def find_registry_namespace(client, repo, config, error_on_fail=False):
+    '''If a unique registry and/or namespace exists for the given repo in
+    the locally tagged images, override any config settings'''
+    # TODO: tag the image with user-set registry and/or namespace via either
+    #       hydrant.cfg or CLI args before push
     repo_images = [tag for image in client.images.list() \
                    for tag in image.tags if '/' + repo + ':' in tag]
     namespaces = set(image.split('/')[-2] for image in repo_images)
     registries = set(image.split('/')[0] for image in repo_images
                      if image.count('/') == 2)
-    registry = None
+    registry = config.Registry
+    namespace = config.Namespace
     if len(registries) == 1:
         registry = registries.pop()
     if len(namespaces) == 1:
-        return registry, namespaces.pop()
-    if error_on_fail:
-        raise ValueError("Found {} namespaces for {}, was expecting 1.".format(
-                         len(namespaces), repo))
-    return registry, None
-
-def add_default_arg(arg, kwargs):
-    kwargs['default'] = arg
-    kwargs['help'] += " (default: %(default)s)"
+        namespace = namespaces.pop()
+    return registry, namespace
 
 def push_image(client, repo, kwargs):
     for line in client.images.push(repo, **kwargs):
@@ -66,6 +65,8 @@ def docker_login(kwargs):
     return kwargs
 
 def main(args=None):
+    # TODO: allow bulk pushes from the workspace level like with build
+    docker_cfg = ConfigLoader().config.Docker
     parser = ArgumentParser(description="Publish docker image")
     if __name__ != '__main__':
         parser.prog += " docker " + __name__.rsplit('.', 1)[-1]
@@ -75,13 +76,16 @@ def main(args=None):
     client = docker.from_env()
     
     try:
-        registry, namespace = find_registry_namespace(client, repo)
+        registry, namespace = find_registry_namespace(client, repo, docker_cfg)
     except:
         logging.exception("%s requires a running docker daemon. Please " +
                           "start or install one from %s before trying again.",
                           parser.prog,
                           "https://www.docker.com/community-edition#/download")
         sys.exit(1)
+        
+    registry = registry or docker_cfg.Registry
+    namespace = namespace or docker_cfg.Namespace
     
     reg_kwargs = {'help': "Host[:port] of registry if not at Docker Hub"}
     if registry is not None:
@@ -96,7 +100,7 @@ def main(args=None):
     parser.add_argument('-n', '--namespace', **ns_kwargs)
     parser.add_argument('-r', '--repository', default=repo,
                         help='Repository name (default: %(default)s)')
-    tag = get_version('.')
+    tag = docker_cfg.Tag
     parser.add_argument('-t', '--tag', help="Version of the image or task " + \
                         "(default: {})".format(tag or 'latest'), default=tag)
     
