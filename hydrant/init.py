@@ -175,7 +175,8 @@ def workflow_wdl_contents(workflow_name, num_tasks, user_tasks):
         workflow += "\n\n" + "\n\n".join("    call " + task.name
                                          for task in user_tasks)
     for task in range(1, num_tasks + 1):
-        all_tasks += task_wdl_contents(task, workflow_name, pwuid[4], pwuid[0])
+        all_tasks += task_wdl_contents(task, workflow_name.lower(), pwuid[4],
+                                       pwuid[0])
         if task == 1:
             workflow += '''
 
@@ -183,7 +184,7 @@ def workflow_wdl_contents(workflow_name, num_tasks, user_tasks):
         input: package=package,
                null_file=null_file,
                package_name=package_name
-    }}'''.format(workflowname=workflow_name)
+    }}'''.format(workflowname=workflow_name.lower())
         else:
             workflow += '''
 
@@ -191,7 +192,8 @@ def workflow_wdl_contents(workflow_name, num_tasks, user_tasks):
         input: package=package,
                null_file=null_file,
                package_archive={workflowname}_task_{prevtask}.{workflowname}_pkg
-    }}'''.format(tasknum=task, prevtask=task - 1, workflowname=workflow_name)
+    }}'''.format(tasknum=task, prevtask=task - 1,
+                 workflowname=workflow_name.lower())
         if task == num_tasks:
             workflow += '''
 
@@ -199,7 +201,7 @@ def workflow_wdl_contents(workflow_name, num_tasks, user_tasks):
         {workflowname}_task_{tasknum}.{workflowname}_pkg
     }}
 }}
-'''.format(tasknum=task, workflowname=workflow_name)
+'''.format(tasknum=task, workflowname=workflow_name.lower())
     if num_tasks < 1:
         workflow += '\n}'
     return all_tasks + workflow
@@ -238,7 +240,7 @@ def generate_workflow(workflow, num_tasks, user_tasks):
     # task folders
     for task in range(1, num_tasks + 1):
         task_folder = os.path.join(workflow,
-                                   '{}_task_{}'.format(workflow, task))
+                                   '{}_task_{}'.format(workflow.lower(), task))
         generate_task(task_folder)
     
     # test folder

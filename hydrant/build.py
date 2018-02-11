@@ -79,6 +79,7 @@ def main(args=None):
             repo_kwargs['nargs'] = '?'
             repo_kwargs['metavar'] = repo_kwargs['choices'][0]
             repo_kwargs['const'] = repo_kwargs['metavar']
+            repo_kwargs['default'] = repo_kwargs['metavar']
     else:
         repo_kwargs['help'] += ''', requires hydrant.cfg file if building
                                multiple images with tags other than "latest"'''
@@ -93,7 +94,9 @@ def main(args=None):
     parser.add_argument('-a', '--all', action='store_true',
                         help="Build all docker images.")
     
-    args = help_if_no_args(parser, args)
+    # Only add help argument if having no arguments would cause an error
+    if 'required' in ns_kwargs and len(repos) != 1:
+        args = help_if_no_args(parser, args)
     args = parser.parse_args(args)
     
     client = docker.from_env()
@@ -104,9 +107,9 @@ def main(args=None):
                                os.path.basename(repo), version)
             build_image(parser.prog, client, repo, tag)
     elif args.repository:
+        all_repos = {os.path.basename(path): path for path in repos}
         if isinstance(args.repository, list):
             user_repos = [repo.split(':', 1)[0] for repo in args.repository]
-            all_repos = {os.path.basename(path): path for path in repos}
             # Only build images if all user-specified ones are available
             build_images = set(user_repos).issubset(set(all_repos.keys()))
             for idx, repo in enumerate(args.repository):
@@ -124,7 +127,8 @@ def main(args=None):
                 sys.exit(1)
         else:
             tag = get_full_tag(args.registry, args.namespace, args.repository)
-            build_image(parser.prog, client, '.', tag)
+            repo = args.repository.split(':', 1)[0]
+            build_image(parser.prog, client, all_repos[repo], tag)
     else:
         logging.error("No repository specified.")
         sys.exit(1)
