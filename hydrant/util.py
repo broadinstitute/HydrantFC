@@ -7,11 +7,11 @@ from collections import namedtuple
 from pkg_resources import resource_filename
 from six.moves.urllib.request import urlretrieve
 
-FixedPaths = namedtuple('FixedPaths', 'USERDIR UTILS DEFAULTS')
+FixedPaths = namedtuple('FixedPaths', 'USERDIR BIN DEFAULTS')
 
 FIXEDPATHS = FixedPaths(
     USERDIR          = os.path.expanduser(os.path.join("~", ".hydrant")),
-    UTILS            = resource_filename(__name__, 'util'),
+    BIN              = resource_filename(__name__, 'bin'),
     DEFAULTS         = resource_filename(__name__, 'defaults')
     )
 

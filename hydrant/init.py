@@ -65,7 +65,7 @@ def generate_task(task):
        os.path.join(task, 'hydrant.cfg'))
     
     ##Copy packaging utility
-    cp(os.path.join(FIXEDPATHS.UTILS, 'package.sh'), srcdir)  # @UndefinedVariable
+    cp(os.path.join(FIXEDPATHS.BIN, 'package.sh'), srcdir)  # @UndefinedVariable
 
     ##Paths for contents
     dockerfile_path = os.path.join(task, "Dockerfile")

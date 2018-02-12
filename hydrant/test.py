@@ -18,7 +18,7 @@ def test(wdl=None, inputs_json='tests/inputs.json'):
         logging.exception("WDL not found: " + wdl)
         sys.exit(2)
     config = ConfigLoader().config.All
-    runcromw = os.path.join(FIXEDPATHS.UTILS, 'runcromw.sh')  # @UndefinedVariable
+    runcromw = os.path.join(FIXEDPATHS.BIN, 'runcromw.sh')  # @UndefinedVariable
     CROMWELL = find_tool(config.Cromwell, "Command-line cromwell")
     try:
         check_call([runcromw, CROMWELL, wdl, inputs_json])
