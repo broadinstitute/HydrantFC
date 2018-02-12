@@ -15,9 +15,9 @@ def install_commands(parsers, commands):
     import importlib
     for cmd in commands:
         prefix = "" if os.path.exists(cmd+".py") else "hydrant."
-        module = importlib.import_module(prefix+cmd)
-        parser = parsers.add_parser(cmd, help=module.Description)
-        parser.set_defaults(func=module.main)
+        mod = importlib.import_module(prefix+cmd)
+        parser = parsers.add_parser(cmd, help=mod.Description, add_help=False)
+        parser.set_defaults(func=mod.main)
 
 def main(args=None):
  
