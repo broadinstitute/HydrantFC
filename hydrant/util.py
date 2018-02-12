@@ -1,6 +1,6 @@
 import os
-import argparse
 import logging
+import argparse
 from shutil import copy2 as cp
 from collections import namedtuple
 from pkg_resources import resource_filename
