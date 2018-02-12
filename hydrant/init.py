@@ -3,11 +3,11 @@
 
 import os
 import pwd
-from argparse import ArgumentParser, ArgumentTypeError
+from argparse import ArgumentTypeError
 from WDL import WDL
 from collections import namedtuple
 from shutil import copy2 as cp
-from util import help_if_no_args, FIXEDPATHS
+from util import ArgumentParser, FIXEDPATHS
 from ConfigLoader import ConfigLoader
 
 Description = "Create dir & templates for authoring tasks & workflows"
@@ -174,7 +174,8 @@ def workflow_wdl_contents(workflow_name, num_tasks, user_tasks):
         workflow += "\n\n" + "\n\n".join("    call " + task.name
                                          for task in user_tasks)
     for task in range(1, num_tasks + 1):
-        all_tasks += task_wdl_contents(task, workflow_name, pwuid[4], pwuid[0])
+        all_tasks += task_wdl_contents(task, workflow_name.lower(), pwuid[4],
+                                       pwuid[0])
         if task == 1:
             workflow += '''
 
@@ -182,7 +183,7 @@ def workflow_wdl_contents(workflow_name, num_tasks, user_tasks):
         input: package=package,
                null_file=null_file,
                package_name=package_name
-    }}'''.format(workflowname=workflow_name)
+    }}'''.format(workflowname=workflow_name.lower())
         else:
             workflow += '''
 
@@ -190,7 +191,8 @@ def workflow_wdl_contents(workflow_name, num_tasks, user_tasks):
         input: package=package,
                null_file=null_file,
                package_archive={workflowname}_task_{prevtask}.{workflowname}_pkg
-    }}'''.format(tasknum=task, prevtask=task - 1, workflowname=workflow_name)
+    }}'''.format(tasknum=task, prevtask=task - 1,
+                 workflowname=workflow_name.lower())
         if task == num_tasks:
             workflow += '''
 
@@ -198,7 +200,7 @@ def workflow_wdl_contents(workflow_name, num_tasks, user_tasks):
         {workflowname}_task_{tasknum}.{workflowname}_pkg
     }}
 }}
-'''.format(tasknum=task, workflowname=workflow_name)
+'''.format(tasknum=task, workflowname=workflow_name.lower())
     if num_tasks < 1:
         workflow += '\n}'
     return all_tasks + workflow
@@ -237,7 +239,7 @@ def generate_workflow(workflow, num_tasks, user_tasks):
     # task folders
     for task in range(1, num_tasks + 1):
         task_folder = os.path.join(workflow,
-                                   '{}_task_{}'.format(workflow, task))
+                                   '{}_task_{}'.format(workflow.lower(), task))
         generate_task(task_folder)
     
     # test folder
@@ -248,9 +250,16 @@ def generate_workflow(workflow, num_tasks, user_tasks):
         wf.write(workflow_wdl_contents(workflow, num_tasks, user_tasks))
 
 def main(args=None):
+
     parser = ArgumentParser(description=Description)
+
+    # Because parser.prog is initialized to the name of the top-level calling
+    # module, it needs to be modified here to be consistent.
+    # (i.e. so hydrant init -h returns a usage that begins with hydrant init
+    # rather than only hydrant)
     if __name__ != '__main__':
         parser.prog += " " + __name__.rsplit('.', 1)[-1]
+
     parser.add_argument('-n', '--num_tasks', type=int, default=1,
                         help='Number of empty tasks to create')
     parser.add_argument('workflow', type=new_folder,
@@ -261,7 +270,6 @@ def main(args=None):
                              '<workflow>.<task|*>, with "<workflow>.*" ' +
                              'indicating all tasks in <workflow>')
     
-    args = help_if_no_args(parser, args)
     args = parser.parse_args(args)
     user_tasks = process_user_tasks(args.task, args.workflow)
     generate_workflow(args.workflow, args.num_tasks, user_tasks)

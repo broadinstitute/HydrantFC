@@ -6,8 +6,7 @@ import sys
 import docker
 import logging
 import json
-from argparse import ArgumentParser
-from util import help_if_no_args, docker_repos, add_default_arg
+from util import ArgumentParser, docker_repos, add_default_arg
 from ConfigLoader import ConfigLoader, SafeConfigParser
 
 Description = "Build docker image defined in the local Dockerfile"
@@ -79,20 +78,26 @@ def main(args=None):
             repo_kwargs['nargs'] = '?'
             repo_kwargs['metavar'] = repo_kwargs['choices'][0]
             repo_kwargs['const'] = repo_kwargs['metavar']
+            repo_kwargs['default'] = repo_kwargs['metavar']
     else:
         repo_kwargs['help'] += ''', requires hydrant.cfg file if building
                                multiple images with tags other than "latest"'''
         
     parser = ArgumentParser(description=Description)
+
+    # Because parser.prog is initialized to the name of the top-level calling
+    # module, it needs to be modified here to be consistent.
+    # (i.e. so hydrant docker build -h returns a usage that begins with
+    # hydrant docker build rather than only hydrant)
     if __name__ != '__main__':
         parser.prog += " docker " + __name__.rsplit('.', 1)[-1]
+
     parser.add_argument('-R', '--registry', **reg_kwargs)
     parser.add_argument('-n', '--namespace', **ns_kwargs)
     parser.add_argument('-r', '--repository', **repo_kwargs)
     parser.add_argument('-a', '--all', action='store_true',
                         help="Build all docker images.")
 
-    args = help_if_no_args(parser, args)
     args = parser.parse_args(args)
     client = docker.from_env()
     
@@ -102,9 +107,9 @@ def main(args=None):
                                os.path.basename(repo), version)
             build_image(parser.prog, client, repo, tag)
     elif args.repository:
+        all_repos = {os.path.basename(path): path for path in repos}
         if isinstance(args.repository, list):
             user_repos = [repo.split(':', 1)[0] for repo in args.repository]
-            all_repos = {os.path.basename(path): path for path in repos}
             # Only build images if all user-specified ones are available
             build_images = set(user_repos).issubset(set(all_repos.keys()))
             for idx, repo in enumerate(args.repository):
@@ -122,7 +127,8 @@ def main(args=None):
                 sys.exit(1)
         else:
             tag = get_full_tag(args.registry, args.namespace, args.repository)
-            build_image(parser.prog, client, '.', tag)
+            repo = args.repository.split(':', 1)[0]
+            build_image(parser.prog, client, all_repos[repo], tag)
     else:
         logging.error("No repository specified.")
         sys.exit(1)

@@ -2,10 +2,10 @@
 # encoding: utf-8
 
 import os
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, ArgumentTypeError
+from argparse import ArgumentDefaultsHelpFormatter, ArgumentTypeError
 from firecloud.fiss import meth_new
 from firecloud.fccore import __fcconfig as fcconfig
-from util import help_if_no_args
+from util import ArgumentParser
 
 Description = 'Installs workflow(s) into the FC method repository'
 
@@ -19,6 +19,10 @@ def main(args=None):
     wdl = method_name + '.wdl'
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
                             description=Description)
+    # Because parser.prog is initialized to the name of the top-level calling
+    # module, it needs to be modified here to be consistent.
+    # (i.e. so hydrant install -h returns a usage that begins with
+    # hydrant install rather than only hydrant)
     if __name__ != '__main__':
         parser.prog += " " + __name__.rsplit('.', 1)[-1]
     
@@ -42,7 +46,6 @@ def main(args=None):
                         help='Optional comment specific to this snapshot',
                         default='')
     
-    args = help_if_no_args(parser, args)
     args = parser.parse_args(args)
     
     meth_new(args)

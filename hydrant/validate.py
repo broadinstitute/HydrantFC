@@ -6,7 +6,7 @@ import sys
 import logging
 from subprocess import check_call, check_output
 from argparse import ArgumentParser, ArgumentTypeError
-from util import help_if_no_args, FIXEDPATHS, find_tool
+from util import FIXEDPATHS, find_tool
 from ConfigLoader import ConfigLoader
 
 Description = "Verify syntax of WDL workflow and generate test json"
@@ -46,7 +46,6 @@ def main(args=None):
     if __name__ != '__main__':
         parser.prog += " " + __name__.rsplit('.', 1)[-1]
     
-    args = help_if_no_args(parser, args)
     args = parser.parse_args(args)
     validate()
 

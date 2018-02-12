@@ -6,7 +6,7 @@ import sys
 import logging
 from subprocess import check_call
 from argparse import ArgumentParser, ArgumentTypeError
-from util import help_if_no_args, FIXEDPATHS, find_tool
+from util import FIXEDPATHS, find_tool
 from ConfigLoader import ConfigLoader
 
 Description = "Run local Cromwell on workflow, with tests/inputs.json"

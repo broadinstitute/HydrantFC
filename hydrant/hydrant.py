@@ -7,8 +7,7 @@ import logging
 from subprocess import check_call, check_output
 from pkg_resources import get_distribution
 from argparse import ArgumentParser
-
-from util import help_if_no_args, initialize_user_dir
+from util import initialize_user_dir
 
 __version__ = "TESTING"
 
@@ -32,7 +31,6 @@ def main(args=None):
     install_commands(subparsers, ['init', 'build','push', 'validate', 'test'])
     install_commands(subparsers, ['tutorial', 'sync', 'install', 'config'])
 
-    args = help_if_no_args(parser, args)
     args, argv = parser.parse_known_args(args)
     initialize_user_dir()
     result = args.func(argv)
