@@ -8,8 +8,7 @@ import logging
 import json
 from six.moves import input
 from getpass import getpass
-from argparse import ArgumentParser
-from util import help_if_no_args, add_default_arg
+from util import ArgumentParser, add_default_arg
 from ConfigLoader import ConfigLoader
 
 def find_registry_namespace(client, repo, config, error_on_fail=False):
@@ -68,6 +67,10 @@ def main(args=None):
     # TODO: allow bulk pushes from the workspace level like with build
     docker_cfg = ConfigLoader().config.Docker
     parser = ArgumentParser(description="Publish docker image")
+    # Because parser.prog is initialized to the name of the top-level calling
+    # module, it needs to be modified here to be consistent.
+    # (i.e. so hydrant docker push -h returns a usage that begins with
+    # hydrant docker push rather than only hydrant)
     if __name__ != '__main__':
         parser.prog += " docker " + __name__.rsplit('.', 1)[-1]
         
@@ -104,7 +107,6 @@ def main(args=None):
     parser.add_argument('-t', '--tag', help="Version of the image or task " + \
                         "(default: {})".format(tag or 'latest'), default=tag)
     
-    args = help_if_no_args(parser, args)
     args = parser.parse_args(args)
     
     repo = args.namespace + '/' + args.repository

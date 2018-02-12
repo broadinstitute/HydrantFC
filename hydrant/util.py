@@ -1,8 +1,9 @@
-import sys
 import os
+import argparse
 
 from collections import namedtuple
 from pkg_resources import resource_filename
+from gettext import gettext as _
 
 FixedPaths = namedtuple('FixedPaths', 'USERDIR UTILS DEFAULTS')
 
@@ -14,13 +15,23 @@ FIXEDPATHS = FixedPaths(
 
 from ConfigLoader import ConfigLoader
 
-def help_if_no_args(parser, args):
-    prefix = '-' if '-' in parser.prefix_chars else parser.prefix_chars[0]
-    if args is not None and len(args) == 0:
-        return [prefix + 'h']
-    if args is None and len(sys.argv) == len(parser.prog.split()):
-        return [prefix + 'h']
-    return args
+class ArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        """error(message: string)
+
+        Prints a help message incorporating the message to stderr and
+        exits.
+        
+        If too few arguments, simply prints help and exits.
+
+        If you override this in a subclass, it should not return -- it
+        should either exit or raise an exception.
+        """
+        if 'too few arguments' in message:
+            self.print_help()
+            self.exit()
+        self.exit(2, _('%s: error: %s\n\n%s\n') % (self.prog, message,
+                                                   self.format_help()))
 
 def add_default_arg(arg, kwargs):
     kwargs['default'] = arg
