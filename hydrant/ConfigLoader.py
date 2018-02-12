@@ -15,19 +15,20 @@ if PY32:
 else:
     from six.moves.configparser import SafeConfigParser
 
-Config = namedtuple('Config', 'All FireCloud Docker')
+Config = namedtuple('Config', 'All FireCloud Docker Tasks')
 AllSection = namedtuple('AllSection', 'Logfile Cromwell WDLtool')
 FireCloudSection = namedtuple('FireCloudSection',
                               ['MethodNamespace', 'Workspaces', 'Synopsis',
                                'Documentation', 'SnapshotComment'])
 DockerSection = namedtuple('DockerSection', 'Registry Namespace Tag')
+TaskSubsection = namedtuple('TaskSubSection', 'Src')
 
 class ConfigLoader(object):
     '''
     Takes a directory and loads config files
     '''
 
-    def __init__(self, path=os.getcwd()):
+    def __init__(self, path=os.getcwd(), cli_cfg=''):
         '''
         Constructor
         '''
@@ -49,7 +50,7 @@ class ConfigLoader(object):
         else:
             workflow_cfg = os.path.join(path, 'hydrant.cfg')
         
-        self._config.read([workflow_cfg, task_cfg])
+        self._config.read([workflow_cfg, task_cfg, cli_cfg])
     
     # from https://docs.python.org/3/library/configparser.html#configparser.ConfigParser.readfp
     @staticmethod
@@ -65,20 +66,33 @@ class ConfigLoader(object):
         all_section  = self._get_section(AllSection, 'All')
         firecloud_section = self._get_section(FireCloudSection, 'FireCloud')
         docker_section = self._get_section(DockerSection, 'Docker')
-        return Config(all_section, firecloud_section, docker_section)
+        tasks_section = self._get_subsections(TaskSubsection, 'Task')
+        return Config(all_section, firecloud_section, docker_section,
+                      tasks_section)
     
     def _get_items(self, section):
         for key, value in self._config.items(section):
-            if value == '':
+            if value.strip() == '': # Convert empty values to None
                 value = None
-            elif ',' in value: # Convert comma-separated fields to arrays
-                value = [field.strip() for field in value.split(',')]
+            elif ',' in value: # Convert comma-separated fields to tuples
+                value = tuple(field.strip() for field in value.split(','))
             yield key, value
     
     def _get_section(self, named_tuple_class, section):
         items = dict(self._get_items(section))
-        return named_tuple_class._make(items.get(key) for key in named_tuple_class._fields)            
+        return named_tuple_class._make(items.get(key) for key in named_tuple_class._fields)
     
+    def _get_subsections(self, named_tuple_class, section_prefix):
+        subsections = [subsection for subsection in self._config.sections() \
+                       if subsection.startswith(section_prefix)]
+        if len(subsections) == 0:
+            return None
+        Section = namedtuple(section_prefix + 's',
+                             [subsection.replace(section_prefix, '').strip() \
+                              for subsection in subsections])
+        return Section(self._get_section(named_tuple_class, subsection)
+                       for subsection in subsections)
+        
     @staticmethod
     def array_to_cfg_str(ary):
         return ','.join(ary)

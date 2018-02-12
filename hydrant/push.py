@@ -8,8 +8,7 @@ import logging
 import json
 from six.moves import input
 from getpass import getpass
-from argparse import ArgumentParser
-from util import help_if_no_args, add_default_arg
+from util import ArgumentParser, add_default_arg
 from ConfigLoader import ConfigLoader
 
 def find_registry_namespace(client, repo, config, error_on_fail=False):
@@ -108,7 +107,6 @@ def main(args=None):
     parser.add_argument('-t', '--tag', help="Version of the image or task " + \
                         "(default: {})".format(tag or 'latest'), default=tag)
     
-    args = help_if_no_args(parser, args)
     args = parser.parse_args(args)
     
     repo = args.namespace + '/' + args.repository

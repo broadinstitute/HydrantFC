@@ -6,8 +6,7 @@ import sys
 import docker
 import logging
 import json
-from argparse import ArgumentParser
-from util import help_if_no_args, docker_repos, add_default_arg
+from util import ArgumentParser, docker_repos, add_default_arg
 from ConfigLoader import ConfigLoader, SafeConfigParser
 
 def get_full_tag(reg, namespc, repo, tag=None):
@@ -98,9 +97,6 @@ def main(args=None):
     parser.add_argument('-a', '--all', action='store_true',
                         help="Build all docker images.")
     
-    # Only add help argument if having no arguments would cause an error
-    if 'required' in ns_kwargs or len(repos) != 1:
-        args = help_if_no_args(parser, args)
     args = parser.parse_args(args)
     
     client = docker.from_env()

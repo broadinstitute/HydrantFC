@@ -5,11 +5,11 @@
 
 import os
 import pwd
-from argparse import ArgumentParser, ArgumentTypeError
+from argparse import ArgumentTypeError
 from WDL import WDL
 from collections import namedtuple
 from shutil import copy2 as cp
-from util import help_if_no_args, FIXEDPATHS
+from util import ArgumentParser, FIXEDPATHS
 from ConfigLoader import ConfigLoader
 
 UserTaskList = namedtuple('UserTaskList', 'flow tasks')
@@ -269,7 +269,6 @@ def main(args=None):
                              '<workflow>.<task|*>, with "<workflow>.*" ' +
                              'indicating all tasks in <workflow>')
     
-    args = help_if_no_args(parser, args)
     args = parser.parse_args(args)
     user_tasks = process_user_tasks(args.task, args.workflow)
     generate_workflow(args.workflow, args.num_tasks, user_tasks)

@@ -1,8 +1,10 @@
 import sys
 import os
+import argparse
 
 from collections import namedtuple
 from pkg_resources import resource_filename
+from gettext import gettext as _
 
 FixedPaths = namedtuple('FixedPaths', 'USERDIR UTILS DEFAULTS')
 
@@ -14,24 +16,23 @@ FIXEDPATHS = FixedPaths(
 
 from ConfigLoader import ConfigLoader
 
-def help_if_no_args(parser, args):
-    """
-    Helper function to give a help message when user provides no arguments
-    rather than an error.
-    Caveat: does not test to see if no arguments is a valid parser condition
-    (i.e. arguments have been set via hydrant.cfg). This should be tested for
-    before running.
-    """
-    # Determine the argument prefix character (copied from argparser code)
-    prefix = '-' if '-' in parser.prefix_chars else parser.prefix_chars[0]
-    # check if args is an empty list (i.e. this module was called by another)
-    if args is not None and len(args) == 0:
-        return [prefix + 'h']
-    # check if sys.argv only contains the command and subcommands
-    # (i.e. this module was called directly)
-    if args is None and len(sys.argv) == len(parser.prog.split()):
-        return [prefix + 'h']
-    return args
+class ArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        """error(message: string)
+
+        Prints a help message incorporating the message to stderr and
+        exits.
+        
+        If too few arguments, simply prints help and exits.
+
+        If you override this in a subclass, it should not return -- it
+        should either exit or raise an exception.
+        """
+        if 'too few arguments' in message:
+            self.print_help()
+            self.exit()
+        self.exit(2, _('%s: error: %s\n\n%s\n') % (self.prog, message,
+                                                   self.format_help()))
 
 def add_default_arg(arg, kwargs):
     kwargs['default'] = arg
