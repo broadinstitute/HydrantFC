@@ -7,6 +7,8 @@ from firecloud.fiss import meth_new
 from firecloud.fccore import __fcconfig as fcconfig
 from util import ArgumentParser
 
+Description = 'Installs workflow(s) into the FC method repository'
+
 def ValidFile(filename):
     if not os.path.isfile(filename):
         raise ArgumentTypeError("{} was not found on the filesystem".format(filename))
@@ -16,9 +18,7 @@ def main(args=None):
     method_name = os.path.basename(os.getcwd())
     wdl = method_name + '.wdl'
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
-                            description='''
-    Installs workflows into the FireCloud method repository. Basically a
-    wrapper for "fissfc meth_new"''')
+                            description=Description)
     # Because parser.prog is initialized to the name of the top-level calling
     # module, it needs to be modified here to be consistent.
     # (i.e. so hydrant install -h returns a usage that begins with

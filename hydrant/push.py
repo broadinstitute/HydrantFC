@@ -11,6 +11,8 @@ from getpass import getpass
 from util import ArgumentParser, add_default_arg
 from ConfigLoader import ConfigLoader
 
+Description = "Push local Docker image to remote repository"
+
 def find_registry_namespace(client, repo, config, error_on_fail=False):
     '''If a unique registry and/or namespace exists for the given repo in
     the locally tagged images, override any config settings'''
@@ -66,7 +68,8 @@ def docker_login(kwargs):
 def main(args=None):
     # TODO: allow bulk pushes from the workspace level like with build
     docker_cfg = ConfigLoader().config.Docker
-    parser = ArgumentParser(description="Publish docker image")
+    parser = ArgumentParser(description=Description)
+
     # Because parser.prog is initialized to the name of the top-level calling
     # module, it needs to be modified here to be consistent.
     # (i.e. so hydrant docker push -h returns a usage that begins with

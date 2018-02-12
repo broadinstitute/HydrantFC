@@ -1,8 +1,6 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-"""Template generator for Firecloud WDL + Docker tasks"""
-
 import os
 import pwd
 from argparse import ArgumentTypeError
@@ -12,6 +10,7 @@ from shutil import copy2 as cp
 from util import ArgumentParser, FIXEDPATHS
 from ConfigLoader import ConfigLoader
 
+Description = "Create dir & templates for authoring tasks & workflows"
 UserTaskList = namedtuple('UserTaskList', 'flow tasks')
 
 def new_folder(folder_name):
@@ -66,7 +65,7 @@ def generate_task(task):
        os.path.join(task, 'hydrant.cfg'))
     
     ##Copy packaging utility
-    cp(os.path.join(FIXEDPATHS.UTILS, 'package.sh'), srcdir)  # @UndefinedVariable
+    cp(os.path.join(FIXEDPATHS.BIN, 'package.sh'), srcdir)  # @UndefinedVariable
 
     ##Paths for contents
     dockerfile_path = os.path.join(task, "Dockerfile")
@@ -251,14 +250,16 @@ def generate_workflow(workflow, num_tasks, user_tasks):
         wf.write(workflow_wdl_contents(workflow, num_tasks, user_tasks))
 
 def main(args=None):
-    parser = ArgumentParser(description="Template generator for " +
-                            "FireCloud tasks and workflows")
+
+    parser = ArgumentParser(description=Description)
+
     # Because parser.prog is initialized to the name of the top-level calling
     # module, it needs to be modified here to be consistent.
     # (i.e. so hydrant init -h returns a usage that begins with hydrant init
     # rather than only hydrant)
     if __name__ != '__main__':
         parser.prog += " " + __name__.rsplit('.', 1)[-1]
+
     parser.add_argument('-n', '--num_tasks', type=int, default=1,
                         help='Number of empty tasks to create')
     parser.add_argument('workflow', type=new_folder,

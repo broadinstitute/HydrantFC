@@ -9,6 +9,8 @@ import json
 from util import ArgumentParser, docker_repos, add_default_arg
 from ConfigLoader import ConfigLoader, SafeConfigParser
 
+Description = "Build docker image defined in the local Dockerfile"
+
 def get_full_tag(reg, namespc, repo, tag=None):
     full_tag = namespc + '/' + repo
     if reg is not None:
@@ -48,8 +50,6 @@ def build_image(name, client, path, tag):
     with open(os.path.join(path, 'hydrant.cfg'), 'wb') as task_cfg_file:
         task_cfg.write(task_cfg_file)
         
-    
-        
 def main(args=None):
     repos = {repo: version for repo, version in docker_repos()}
     docker_cfg = ConfigLoader().config.Docker
@@ -83,22 +83,22 @@ def main(args=None):
         repo_kwargs['help'] += ''', requires hydrant.cfg file if building
                                multiple images with tags other than "latest"'''
         
-    parser = ArgumentParser(description="Build docker image")
+    parser = ArgumentParser(description=Description)
+
     # Because parser.prog is initialized to the name of the top-level calling
     # module, it needs to be modified here to be consistent.
     # (i.e. so hydrant docker build -h returns a usage that begins with
     # hydrant docker build rather than only hydrant)
     if __name__ != '__main__':
         parser.prog += " docker " + __name__.rsplit('.', 1)[-1]
-    parser.add_argument('-R', '--registry',
-                        **reg_kwargs)
+
+    parser.add_argument('-R', '--registry', **reg_kwargs)
     parser.add_argument('-n', '--namespace', **ns_kwargs)
     parser.add_argument('-r', '--repository', **repo_kwargs)
     parser.add_argument('-a', '--all', action='store_true',
                         help="Build all docker images.")
-    
+
     args = parser.parse_args(args)
-    
     client = docker.from_env()
     
     if args.all:
