@@ -6,6 +6,13 @@ from collections import namedtuple
 from pkg_resources import resource_filename
 from six.moves.urllib.request import urlretrieve
 from gettext import gettext as _
+import docker
+import time
+import subprocess
+import sys
+import requests.exceptions
+import platform
+from collections import defaultdict
 
 FixedPaths = namedtuple('FixedPaths', 'USERDIR BIN DEFAULTS')
 
@@ -84,3 +91,55 @@ def initialize_user_dir():
                  hydrant_cfg, indent + "    ",
                  "https://docs.python.org/3/library/configparser.html" +
                  "#supported-ini-file-structure", indent)
+
+__DaemonLaunchers = defaultdict(
+    lambda: None,
+    Darwin='open -a Docker',
+    Windows=None,
+    Linux=None
+)
+def __launch_daemon(client, interval=3, numtries=10):
+
+    which = platform.system()
+    launcher = __DaemonLaunchers.get(which, None)
+    if not launcher:
+        stderr("Docker daemon is not running, and this tool does not yet ")
+        stderr("provide\nauto start for %s; please start manually.\n" % which)
+        sys.exit(1)
+
+    # Convenient shorthands for readability
+    connError = requests.exceptions.ConnectionError
+    apiError = docker.errors.APIError
+    stderr = sys.stderr.write
+
+    # Launch daemon ...
+    stderr("Docker daemon not running, launching now ")
+    try:
+        subprocess.check_output(launcher.split(), stderr=subprocess.STDOUT)
+    except Exception as error:
+        stderr("\nCould not find/launch daemon: %s\n\t%s\n" % (launcher, error))
+        stderr("Docker can be downloaded from\n"+\
+                "\thttps://www.docker.com/community-edition#/download\n")
+        sys.exit(2) # Posix errno 2: no such file or directory
+
+    # Then try to connect ...
+    while True and numtries > 0:
+        try:
+            result = client.ping()
+            stderr("connected!\n")
+            return
+        except (connError, apiError) as error:
+            stderr('.')
+            time.sleep(interval)
+        numtries -= 1
+    stderr("Failed to launch or connect to container daemon")
+    sys.exit(3) # Posix errno 3: no such process
+
+def connect_to_daemon():
+
+    client = docker.from_env()
+    try:
+        result = client.ping()
+    except requests.exceptions.ConnectionError as err:
+        __launch_daemon(client)
+    return client

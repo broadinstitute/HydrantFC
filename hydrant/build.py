@@ -3,10 +3,9 @@
 
 import os
 import sys
-import docker
 import logging
 import json
-from util import ArgumentParser, docker_repos, add_default_arg
+from util import ArgumentParser, docker_repos, add_default_arg, connect_to_daemon
 from ConfigLoader import ConfigLoader, SafeConfigParser
 
 Description = "Build docker image defined in the local Dockerfile"
@@ -32,11 +31,8 @@ def build_image(name, client, path, tag):
     try:
         for result in client.images.build(path=path, tag=tag, rm=True)[1]:
             logging.info(json.dumps(result).rstrip().replace(r'\n', ''))
-    except:
-        logging.exception("%s requires a running docker daemon. Please " +
-                          "start or install one from %s before trying again.",
-                          name,
-                          "https://www.docker.com/community-edition#/download")
+    except Exception as e:
+        logging.exception(str(e))
         sys.exit(1)
         
     reg, namespace, _, tag = extract_full_tag(tag)
@@ -99,7 +95,7 @@ def main(args=None):
                         help="Build all docker images.")
 
     args = parser.parse_args(args)
-    client = docker.from_env()
+    client = connect_to_daemon()
     
     if args.all:
         for repo, version in repos.items():

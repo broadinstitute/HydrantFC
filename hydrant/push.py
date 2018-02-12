@@ -3,12 +3,11 @@
 
 import os
 import sys
-import docker
 import logging
 import json
 from six.moves import input
 from getpass import getpass
-from util import ArgumentParser, add_default_arg
+from util import ArgumentParser, add_default_arg, connect_to_daemon
 from ConfigLoader import ConfigLoader
 
 Description = "Push local Docker image to remote repository"
@@ -79,15 +78,12 @@ def main(args=None):
         
     repo = os.path.basename(os.getcwd())
     
-    client = docker.from_env()
+    client = connect_to_daemon()
     
     try:
         registry, namespace = find_registry_namespace(client, repo, docker_cfg)
-    except:
-        logging.exception("%s requires a running docker daemon. Please " +
-                          "start or install one from %s before trying again.",
-                          parser.prog,
-                          "https://www.docker.com/community-edition#/download")
+    except Exception as e:
+        logging.exception(str(e))
         sys.exit(1)
         
     registry = registry or docker_cfg.Registry
