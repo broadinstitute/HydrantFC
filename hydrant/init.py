@@ -253,6 +253,10 @@ def generate_workflow(workflow, num_tasks, user_tasks):
 def main(args=None):
     parser = ArgumentParser(description="Template generator for " +
                             "FireCloud tasks and workflows")
+    # Because parser.prog is initialized to the name of the top-level calling
+    # module, it needs to be modified here to be consistent.
+    # (i.e. so hydrant init -h returns a usage that begins with hydrant init
+    # rather than only hydrant)
     if __name__ != '__main__':
         parser.prog += " " + __name__.rsplit('.', 1)[-1]
     parser.add_argument('-n', '--num_tasks', type=int, default=1,

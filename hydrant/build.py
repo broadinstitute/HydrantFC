@@ -85,6 +85,10 @@ def main(args=None):
                                multiple images with tags other than "latest"'''
         
     parser = ArgumentParser(description="Build docker image")
+    # Because parser.prog is initialized to the name of the top-level calling
+    # module, it needs to be modified here to be consistent.
+    # (i.e. so hydrant docker build -h returns a usage that begins with
+    # hydrant docker build rather than only hydrant)
     if __name__ != '__main__':
         parser.prog += " docker " + __name__.rsplit('.', 1)[-1]
     parser.add_argument('-R', '--registry',
@@ -95,7 +99,7 @@ def main(args=None):
                         help="Build all docker images.")
     
     # Only add help argument if having no arguments would cause an error
-    if 'required' in ns_kwargs and len(repos) != 1:
+    if 'required' in ns_kwargs or len(repos) != 1:
         args = help_if_no_args(parser, args)
     args = parser.parse_args(args)
     

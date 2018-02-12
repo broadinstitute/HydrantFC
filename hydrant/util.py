@@ -15,9 +15,20 @@ FIXEDPATHS = FixedPaths(
 from ConfigLoader import ConfigLoader
 
 def help_if_no_args(parser, args):
+    """
+    Helper function to give a help message when user provides no arguments
+    rather than an error.
+    Caveat: does not test to see if no arguments is a valid parser condition
+    (i.e. arguments have been set via hydrant.cfg). This should be tested for
+    before running.
+    """
+    # Determine the argument prefix character (copied from argparser code)
     prefix = '-' if '-' in parser.prefix_chars else parser.prefix_chars[0]
+    # check if args is an empty list (i.e. this module was called by another)
     if args is not None and len(args) == 0:
         return [prefix + 'h']
+    # check if sys.argv only contains the command and subcommands
+    # (i.e. this module was called directly)
     if args is None and len(sys.argv) == len(parser.prog.split()):
         return [prefix + 'h']
     return args

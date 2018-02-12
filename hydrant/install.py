@@ -19,6 +19,10 @@ def main(args=None):
                             description='''
     Installs workflows into the FireCloud method repository. Basically a
     wrapper for "fissfc meth_new"''')
+    # Because parser.prog is initialized to the name of the top-level calling
+    # module, it needs to be modified here to be consistent.
+    # (i.e. so hydrant install -h returns a usage that begins with
+    # hydrant install rather than only hydrant)
     if __name__ != '__main__':
         parser.prog += " " + __name__.rsplit('.', 1)[-1]
     

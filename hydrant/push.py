@@ -68,6 +68,10 @@ def main(args=None):
     # TODO: allow bulk pushes from the workspace level like with build
     docker_cfg = ConfigLoader().config.Docker
     parser = ArgumentParser(description="Publish docker image")
+    # Because parser.prog is initialized to the name of the top-level calling
+    # module, it needs to be modified here to be consistent.
+    # (i.e. so hydrant docker push -h returns a usage that begins with
+    # hydrant docker push rather than only hydrant)
     if __name__ != '__main__':
         parser.prog += " docker " + __name__.rsplit('.', 1)[-1]
         
