@@ -1,8 +1,6 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-"""Template generator for Firecloud WDL + Docker tasks"""
-
 import os
 import pwd
 from argparse import ArgumentParser, ArgumentTypeError
@@ -12,6 +10,7 @@ from shutil import copy2 as cp
 from util import help_if_no_args, FIXEDPATHS
 from ConfigLoader import ConfigLoader
 
+Description = "Create dir & templates for authoring tasks & workflows"
 UserTaskList = namedtuple('UserTaskList', 'flow tasks')
 
 def new_folder(folder_name):
@@ -249,8 +248,7 @@ def generate_workflow(workflow, num_tasks, user_tasks):
         wf.write(workflow_wdl_contents(workflow, num_tasks, user_tasks))
 
 def main(args=None):
-    parser = ArgumentParser(description="Template generator for " +
-                            "FireCloud tasks and workflows")
+    parser = ArgumentParser(description=Description)
     if __name__ != '__main__':
         parser.prog += " " + __name__.rsplit('.', 1)[-1]
     parser.add_argument('-n', '--num_tasks', type=int, default=1,

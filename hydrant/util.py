@@ -1,8 +1,11 @@
+
 import sys
 import os
-
+import logging
+from shutil import copy2 as cp
 from collections import namedtuple
 from pkg_resources import resource_filename
+from six.moves.urllib.request import urlretrieve
 
 FixedPaths = namedtuple('FixedPaths', 'USERDIR UTILS DEFAULTS')
 
@@ -37,3 +40,37 @@ def docker_repos(path=os.getcwd()):
         if 'Dockerfile' in files:
             del dirs[:] # no need to descend further
             yield (root, get_version(root))
+
+def find_tool(url, name):
+    # Look for local instance of tool with given name, download if necessary
+    local = os.path.join(FIXEDPATHS.USERDIR, url.rsplit('/', 1)[-1])  # @UndefinedVariable
+    if not os.path.exists(FIXEDPATHS.USERDIR):  # @UndefinedVariable
+        logging.info("No path found for hydrant utilities, creating %s",
+                     FIXEDPATHS.USERDIR)  # @UndefinedVariable
+        os.mkdir(FIXEDPATHS.USERDIR)  # @UndefinedVariable
+    if not os.path.exists(local):
+        logging.info("%s not found. Downloading from %s to %s.",
+                     name, url, local)
+        urlretrieve(url, local)
+    return local
+
+def initialize_user_dir():
+
+    # Ensure custom Hydrant directory exists for user
+    if not os.path.isdir(FIXEDPATHS.USERDIR):  # @UndefinedVariable
+        logging.info("First run of hydrant, creating %s", FIXEDPATHS.USERDIR)  # @UndefinedVariable
+        os.mkdir(FIXEDPATHS.USERDIR)  # @UndefinedVariable
+
+    # Ensure that it contains a default config file
+    if not os.path.isfile(os.path.join(FIXEDPATHS.USERDIR, 'hydrant.cfg')):  # @UndefinedVariable
+        indent = " " * 30
+        user_cfg = os.path.join(FIXEDPATHS.DEFAULTS, 'user.cfg')  # @UndefinedVariable
+        hydrant_cfg = os.path.join(FIXEDPATHS.USERDIR, 'hydrant.cfg')  # @UndefinedVariable
+        logging.info('Generating initial hydrant.cfg')
+        cp(user_cfg, hydrant_cfg)
+        logging.info("%s added. You may edit using INI file structure and basic " +
+                "interpolation as defined here:\n%s%s\n%sWorkspaces list " +
+                 "may be defined with commas (Workspaces=ws1,ws2,ws3).",
+                 hydrant_cfg, indent + "    ",
+                 "https://docs.python.org/3/library/configparser.html" +
+                 "#supported-ini-file-structure", indent)

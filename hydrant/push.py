@@ -12,6 +12,8 @@ from argparse import ArgumentParser
 from util import help_if_no_args, add_default_arg
 from ConfigLoader import ConfigLoader
 
+Description = "Push local Docker image to remote repository"
+
 def find_registry_namespace(client, repo, config, error_on_fail=False):
     '''If a unique registry and/or namespace exists for the given repo in
     the locally tagged images, override any config settings'''
@@ -67,7 +69,7 @@ def docker_login(kwargs):
 def main(args=None):
     # TODO: allow bulk pushes from the workspace level like with build
     docker_cfg = ConfigLoader().config.Docker
-    parser = ArgumentParser(description="Publish docker image")
+    parser = ArgumentParser(description=Description)
     if __name__ != '__main__':
         parser.prog += " docker " + __name__.rsplit('.', 1)[-1]
         
