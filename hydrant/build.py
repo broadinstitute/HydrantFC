@@ -27,7 +27,7 @@ def extract_full_tag(full_tag):
         reg = chunks[0]
     return reg, namespace, repo, tag
 
-def build_image(name, client, path, tag):
+def build_image(client, path, tag):
     try:
         for result in client.images.build(path=path, tag=tag, rm=True)[1]:
             logging.info(json.dumps(result).rstrip().replace(r'\n', ''))
@@ -101,7 +101,7 @@ def main(args=None):
         for repo, version in repos.items():
             tag = get_full_tag(args.registry, args.namespace,
                                os.path.basename(repo), version)
-            build_image(parser.prog, client, repo, tag)
+            build_image(client, repo, tag)
     elif args.repository:
         all_repos = {os.path.basename(path): path for path in repos}
         if isinstance(args.repository, list):
@@ -113,7 +113,7 @@ def main(args=None):
                 user_repo = user_repos[idx]
                 if user_repo in all_repos:
                     if build_images:
-                        build_image(parser.prog, client, all_repos[user_repo],
+                        build_image(client, all_repos[user_repo],
                                     tag)
                 else:
                     logging.error("Could not find a path for %s. Please ensure" + \
@@ -124,7 +124,7 @@ def main(args=None):
         else:
             tag = get_full_tag(args.registry, args.namespace, args.repository)
             repo = args.repository.split(':', 1)[0]
-            build_image(parser.prog, client, all_repos[repo], tag)
+            build_image(client, all_repos[repo], tag)
     else:
         logging.error("No repository specified.")
         sys.exit(1)

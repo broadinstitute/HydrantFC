@@ -4,12 +4,13 @@
 import os
 import sys
 import logging
-from argparse import ArgumentParser, ArgumentTypeError
+from util import ArgumentParser
+from argparse import ArgumentTypeError
 
 Description = 'Update WDLs of local workflows which use this Docker'
 
 def sync():
-	logging.info("The sync command is not implemented yet")
+    logging.info("The sync command is not implemented yet")
 
 def main(args=None):
     parser = ArgumentParser(description=Description + \

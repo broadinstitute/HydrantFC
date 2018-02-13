@@ -5,8 +5,7 @@ import os
 import sys
 import logging
 from subprocess import check_call, check_output
-from argparse import ArgumentParser, ArgumentTypeError
-from util import FIXEDPATHS, find_tool
+from util import ArgumentParser, find_tool
 from ConfigLoader import ConfigLoader
 
 Description = "Verify syntax of WDL workflow and generate test json"
