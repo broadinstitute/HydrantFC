@@ -6,8 +6,7 @@ import sys
 import logging
 from subprocess import check_call, check_output
 from pkg_resources import get_distribution
-from argparse import ArgumentParser
-from util import initialize_user_dir
+from util import ArgumentParser, initialize_user_dir
 
 __version__ = "TESTING"
 

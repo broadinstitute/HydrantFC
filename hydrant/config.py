@@ -4,12 +4,12 @@
 import os
 import sys
 import logging
-from argparse import ArgumentParser
+from util import ArgumentParser
 
 Description = "Update FC method configurations for this workflow"
 
 def config():
-	logging.info("The config command is not implemented yet")
+    logging.info("The config command is not implemented yet")
 
 def main(args=None):
     parser = ArgumentParser(description=Description+\

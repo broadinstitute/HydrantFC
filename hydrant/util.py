@@ -10,7 +10,11 @@ import docker
 import time
 import subprocess
 import sys
-import requests.exceptions
+
+# Convenient shorthands for readability
+from requests.exceptions import ConnectionError as connError
+from docker.errors import APIError as apiError
+
 import platform
 from collections import defaultdict
 
@@ -98,19 +102,17 @@ __DaemonLaunchers = defaultdict(
     Windows=None,
     Linux=None
 )
-def __launch_daemon(client, interval=3, numtries=10):
 
+def __launch_daemon(client, interval=3, numtries=10):
+    # TODO: change from sys.stderr.write to logging.error/logging.exception, as
+    # sys.stderr.write is bufferred
+    stderr = sys.stderr.write
     which = platform.system()
     launcher = __DaemonLaunchers.get(which, None)
     if not launcher:
         stderr("Docker daemon is not running, and this tool does not yet ")
         stderr("provide\nauto start for %s; please start manually.\n" % which)
         sys.exit(1)
-
-    # Convenient shorthands for readability
-    connError = requests.exceptions.ConnectionError
-    apiError = docker.errors.APIError
-    stderr = sys.stderr.write
 
     # Launch daemon ...
     stderr("Docker daemon not running, launching now ")
@@ -128,7 +130,7 @@ def __launch_daemon(client, interval=3, numtries=10):
             result = client.ping()
             stderr("connected!\n")
             return
-        except (connError, apiError) as error:
+        except (connError, apiError):
             stderr('.')
             time.sleep(interval)
         numtries -= 1
@@ -140,6 +142,6 @@ def connect_to_daemon():
     client = docker.from_env()
     try:
         result = client.ping()
-    except requests.exceptions.ConnectionError as err:
+    except connError:
         __launch_daemon(client)
     return client
