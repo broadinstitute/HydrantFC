@@ -8,9 +8,9 @@ import pwd
 from argparse import ArgumentTypeError
 from WDL import WDL
 from collections import namedtuple
-from shutil import copy2 as cp
+from shutil import copy2 as cp, copytree as copydir
 from util import ArgumentParser, FIXEDPATHS
-from ConfigLoader import ConfigLoader
+from ConfigLoader import ConfigLoader, SafeConfigParser
 
 UserTaskList = namedtuple('UserTaskList', 'flow tasks')
 
@@ -42,6 +42,9 @@ def user_task(flow_task):
     
     raise ArgumentTypeError("Unable to locate {} in {}".format(task, flow))
 
+def task_config(cli_cfg):
+    return ConfigLoader(cli_cfg=cli_cfg).config
+
 def process_user_tasks(user_tasks, new_flow):
     # Update/create SYNC files
     processed_tasks = []
@@ -56,14 +59,36 @@ def process_user_tasks(user_tasks, new_flow):
     # Return flattened list of tasks
     return processed_tasks
 
-def generate_task(task):
+def generate_task(task, task_cfg=None):
     ##Make new folders
     srcdir = os.path.join(task, "src")
-    os.makedirs(srcdir)
+    base_task_cfg = os.path.join(FIXEDPATHS.DEFAULTS, 'task.cfg')  # @UndefinedVariable
+    out_task_cfg = os.path.join(task, 'hydrant.cfg')
     
-    ##Copy default config
-    cp(os.path.join(FIXEDPATHS.DEFAULTS, 'task.cfg'),  # @UndefinedVariable
-       os.path.join(task, 'hydrant.cfg'))
+    if task_cfg is None:
+        ##Copy default config
+        os.makedirs(srcdir)
+        cp(base_task_cfg, out_task_cfg)
+    else:
+        # TODO: also handle URLs
+        if task_cfg.Src is not None:
+            if os.path.isdir(task_cfg.Src):
+                copydir(task_cfg.Src, srcdir)
+            else:
+                os.makedirs(srcdir)
+                cp(task_cfg.Src, srcdir)
+        else:
+            os.makedirs(srcdir)
+        cfg = SafeConfigParser(allow_no_value=True)
+        cfg.optionxform = str
+        cfg.read(base_task_cfg)
+        for option in cfg.options('Docker'):
+            usr_val = getattr(task_cfg, option)
+            if usr_val is not None:
+                cfg.set('Docker', option, usr_val)
+        with open(out_task_cfg, 'wb') as task_cfg_file:
+            cfg.write(task_cfg_file)
+            
     
     ##Copy packaging utility
     cp(os.path.join(FIXEDPATHS.UTILS, 'package.sh'), srcdir)  # @UndefinedVariable
@@ -78,10 +103,17 @@ def generate_task(task):
     with open(dockerignore_path, 'w') as di:
         di.write(dockerignore_contents())
 
-def task_wdl_contents(task_num, workflow, fullname, username):
-    namespace = ConfigLoader().config.Docker.Namespace
+def task_wdl_contents(task_name, task_num, workflow, fullname, username,
+                      config):
+    tag = 1
+    namespace = config.Docker.Namespace
+    if config.Tasks is not None:
+        task_cfg = getattr(config.Tasks, task_name, None)
+        if task_cfg is not None:
+            tag = task_cfg.Tag or tag
+            namespace = task_cfg.Namespace or namespace
     if task_num == 1:
-        contents = '''task {workflowname}_task_{tasknum} {{
+        contents = '''task {task} {{
     Boolean package
     String null_file
     String package_name
@@ -107,7 +139,7 @@ def task_wdl_contents(task_num, workflow, fullname, username):
     }}
 
     runtime {{
-        docker : "{namespace}/{workflowname}_task_{tasknum}:1"
+        docker : "{namespace}/{task}:{tag}"
         disks : "local-disk ${{if defined(local_disk_gb) then local_disk_gb else '10'}} HDD"
         preemptible : "${{if defined(num_preemptions) then num_preemptions else '0'}}"
     }}
@@ -120,7 +152,7 @@ def task_wdl_contents(task_num, workflow, fullname, username):
 
 '''
     else:
-        contents = '''task {workflowname}_task_{tasknum} {{
+        contents = '''task {task} {{
     Boolean package
     String null_file
     File package_archive
@@ -147,7 +179,7 @@ def task_wdl_contents(task_num, workflow, fullname, username):
     }}
 
     runtime {{
-        docker : "{namespace}/{workflowname}_task_{tasknum}:1"
+        docker : "{namespace}/{task}:{tag}"
         disks : "local-disk ${{if defined(local_disk_gb) then local_disk_gb else '10'}} HDD"
         preemptible : "${{if defined(num_preemptions) then num_preemptions else '0'}}"
     }}
@@ -159,11 +191,41 @@ def task_wdl_contents(task_num, workflow, fullname, username):
 }}
 
 '''
-    return contents.format(tasknum=task_num, workflowname=workflow,
-                           fullname=fullname, username=username,
+    return contents.format(task=task_name, workflowname=workflow,
+                           fullname=fullname, username=username, tag=tag,
                            namespace=namespace or 'broadgdac')
 
-def workflow_wdl_contents(workflow_name, num_tasks, user_tasks):
+def worflow_wdl_calls(task_name, task_num, workflow, tot_tasks, prev_task=''):
+    if task_num == 1:
+        workflow_wdl = '''
+
+    call {taskname} {{
+        input: package=package,
+               null_file=null_file,
+               package_name=package_name
+    }}'''.format(taskname=task_name)
+    else:
+        workflow_wdl = '''
+
+    call {taskname} {{
+        input: package=package,
+               null_file=null_file,
+               package_archive={prevtask}.{workflowname}_pkg
+    }}'''.format(taskname=task_name, prevtask=prev_task,
+                 workflowname=workflow)
+    if task_num == tot_tasks:
+        workflow_wdl += '''
+
+    output {{
+        {taskname}.{workflowname}_pkg
+    }}
+}}
+'''.format(taskname=task_name, workflowname=workflow)
+        
+    return workflow_wdl
+    
+
+def workflow_wdl_contents(workflow_name, num_tasks, user_tasks, config):
     pwuid = pwd.getpwuid(os.getuid())
     all_tasks = ''
     workflow = '''workflow {workflowname} {{
@@ -174,35 +236,31 @@ def workflow_wdl_contents(workflow_name, num_tasks, user_tasks):
         all_tasks = "\n\n".join(task.text for task in user_tasks) + "\n\n"
         workflow += "\n\n" + "\n\n".join("    call " + task.name
                                          for task in user_tasks)
+    tot_tasks = num_tasks
+    cfg_task_ct = 0
+    task = 0
+    prev_task = ''
+    if config.Tasks is not None:
+        cfg_task_ct = len(config.Tasks)
+        tot_tasks += cfg_task_ct
+        for task, taskname in enumerate(config.Tasks._fields, 1):
+            all_tasks += task_wdl_contents(taskname, task,
+                                           workflow_name.lower(), pwuid[4],
+                                           pwuid[0], config)
+            workflow += worflow_wdl_calls(taskname, task, workflow_name.lower(),
+                                          tot_tasks, prev_task)
+            prev_task = taskname
+    
     for task in range(1, num_tasks + 1):
-        all_tasks += task_wdl_contents(task, workflow_name.lower(), pwuid[4],
-                                       pwuid[0])
-        if task == 1:
-            workflow += '''
-
-    call {workflowname}_task_1 {{
-        input: package=package,
-               null_file=null_file,
-               package_name=package_name
-    }}'''.format(workflowname=workflow_name.lower())
-        else:
-            workflow += '''
-
-    call {workflowname}_task_{tasknum} {{
-        input: package=package,
-               null_file=null_file,
-               package_archive={workflowname}_task_{prevtask}.{workflowname}_pkg
-    }}'''.format(tasknum=task, prevtask=task - 1,
-                 workflowname=workflow_name.lower())
-        if task == num_tasks:
-            workflow += '''
-
-    output {{
-        {workflowname}_task_{tasknum}.{workflowname}_pkg
-    }}
-}}
-'''.format(tasknum=task, workflowname=workflow_name.lower())
-    if num_tasks < 1:
+        task_ct = task + cfg_task_ct
+        taskname = '{}_task_{}'.format(workflow_name.lower(), task)
+        all_tasks += task_wdl_contents(taskname, task_ct,
+                                       workflow_name.lower(), pwuid[4],
+                                       pwuid[0], config)
+        workflow += worflow_wdl_calls(taskname, task_ct, workflow_name.lower(),
+                                      tot_tasks, prev_task)
+        prev_task = taskname
+    if tot_tasks < 1:
         workflow += '\n}'
     return all_tasks + workflow
 
@@ -235,7 +293,7 @@ def dockerignore_contents():
 !Dockerfile
 '''
 
-def generate_workflow(workflow, num_tasks, user_tasks):    
+def generate_workflow(workflow, num_tasks, user_tasks, config):    
     # Make new folders
     # task folders
     for task in range(1, num_tasks + 1):
@@ -243,12 +301,16 @@ def generate_workflow(workflow, num_tasks, user_tasks):
                                    '{}_task_{}'.format(workflow.lower(), task))
         generate_task(task_folder)
     
+    if config.Tasks is not None:
+        for task in config.Tasks._fields:
+            task_folder = os.path.join(workflow, task)
+            generate_task(task_folder, getattr(config.Tasks, task))
     # test folder
     os.mkdir(os.path.join(workflow, "tests"))
 
     wdl_path = os.path.join(workflow, workflow + ".wdl")
     with open(wdl_path, 'w') as wf:
-        wf.write(workflow_wdl_contents(workflow, num_tasks, user_tasks))
+        wf.write(workflow_wdl_contents(workflow, num_tasks, user_tasks, config))
 
 def main(args=None):
     parser = ArgumentParser(description="Template generator for " +
@@ -261,6 +323,13 @@ def main(args=None):
         parser.prog += " " + __name__.rsplit('.', 1)[-1]
     parser.add_argument('-n', '--num_tasks', type=int, default=1,
                         help='Number of empty tasks to create')
+    parser.add_argument('-c', '--config', type=task_config,
+                        help='Config file with [Task <task_name>] sections ' +
+                             'that may contain Src=<path/to/src> and ' +
+                             'any [Docker] section arguments to initialize ' +
+                             'tasks with specified names, copy source code ' +
+                             "to each task's src directory, and initialize " +
+                             "each task's hydrant.cfg")
     parser.add_argument('workflow', type=new_folder,
                         help='Name of template folder')
     parser.add_argument('task', nargs='*', type=user_task,
@@ -271,7 +340,8 @@ def main(args=None):
     
     args = parser.parse_args(args)
     user_tasks = process_user_tasks(args.task, args.workflow)
-    generate_workflow(args.workflow, args.num_tasks, user_tasks)
+    generate_workflow(args.workflow, args.num_tasks, user_tasks,
+                      args.config or ConfigLoader().config)
 
 if __name__ == '__main__':
     main()

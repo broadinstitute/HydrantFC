@@ -7,14 +7,13 @@ import logging
 from shutil import copy2 as cp
 from subprocess import check_call, check_output
 from pkg_resources import get_distribution
-from argparse import ArgumentParser
 from six.moves.urllib.request import urlretrieve
 
 from init import main as init
 from build import main as build
 from push import main as push
 from install import main as install
-from util import help_if_no_args, FIXEDPATHS
+from util import ArgumentParser, FIXEDPATHS
 
 from ConfigLoader import ConfigLoader
 
@@ -122,8 +121,6 @@ def main(args=None):
                           help="Push WDL to your FireCloud method repository")
     subparsers.add_parser('config', help="Update workspace task configs " +
                           "with the latest snapshot you have committed")
-    
-    args = help_if_no_args(parser, args)
     
     args, argv = parser.parse_known_args(args)
     

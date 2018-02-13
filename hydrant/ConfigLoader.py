@@ -21,7 +21,7 @@ FireCloudSection = namedtuple('FireCloudSection',
                               ['MethodNamespace', 'Workspaces', 'Synopsis',
                                'Documentation', 'SnapshotComment'])
 DockerSection = namedtuple('DockerSection', 'Registry Namespace Tag')
-TaskSubsection = namedtuple('TaskSubSection', 'Src')
+TaskSubsection = namedtuple('TaskSubSection', ('Src',) + DockerSection._fields)
 
 class ConfigLoader(object):
     '''
@@ -90,8 +90,8 @@ class ConfigLoader(object):
         Section = namedtuple(section_prefix + 's',
                              [subsection.replace(section_prefix, '').strip() \
                               for subsection in subsections])
-        return Section(self._get_section(named_tuple_class, subsection)
-                       for subsection in subsections)
+        return Section._make(self._get_section(named_tuple_class, subsection)
+                             for subsection in subsections)
         
     @staticmethod
     def array_to_cfg_str(ary):
