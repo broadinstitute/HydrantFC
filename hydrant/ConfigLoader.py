@@ -9,7 +9,7 @@ from collections import namedtuple
 # SafeConfigParser was renamed to ConfigParser in Python 3.2, and the use of
 # its alias deprecated. Unfortunately six does not accommodate this change.
 
-PY32 = sys.version_info[0:2] >= (3,2)
+PY32 = sys.version_info[0:2] >= (3, 2)
 if PY32:
     from six.moves.configparser import ConfigParser as SafeConfigParser
 else:

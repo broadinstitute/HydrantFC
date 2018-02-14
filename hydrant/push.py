@@ -7,7 +7,7 @@ import logging
 import json
 from six.moves import input
 from getpass import getpass
-from util import ArgumentParser, add_default_arg, connect_to_daemon
+from util import ArgumentParser, add_default_arg, connect_to_daemon, initialize_logging
 from ConfigLoader import ConfigLoader
 
 Description = "Push local Docker image to remote repository"
@@ -119,4 +119,5 @@ def main(args=None):
     push_image(client, repo, push_kwargs)        
 
 if __name__ == '__main__':
+    initialize_logging()
     main()

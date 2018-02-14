@@ -6,7 +6,7 @@ import sys
 import logging
 from json import load as json_load
 from subprocess import check_call
-from util import ArgumentParser, FIXEDPATHS, find_tool
+from util import ArgumentParser, FIXEDPATHS, find_tool, initialize_logging
 from ConfigLoader import ConfigLoader
 
 Description = "Run local Cromwell on workflow, with tests/inputs.json"
@@ -45,4 +45,5 @@ def main(args=None):
     test()
 
 if __name__ == '__main__':
+    initialize_logging()
     main()

@@ -5,7 +5,7 @@ import os
 import sys
 import logging
 import json
-from util import ArgumentParser, docker_repos, add_default_arg, connect_to_daemon
+from util import ArgumentParser, docker_repos, add_default_arg, connect_to_daemon, initialize_logging
 from ConfigLoader import ConfigLoader, SafeConfigParser
 
 Description = "Build docker image defined in the local Dockerfile"
@@ -130,4 +130,5 @@ def main(args=None):
         sys.exit(1)
 
 if __name__ == '__main__':
+    initialize_logging()
     main()
