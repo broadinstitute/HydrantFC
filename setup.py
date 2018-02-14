@@ -1,7 +1,18 @@
 import os
 from setuptools import setup, find_packages
+from platform import system
 _README           = os.path.join(os.path.dirname(__file__), 'README.rst')
 _LONG_DESCRIPTION = open(_README).read()
+
+requirements = [
+    'firecloud',
+    'docker[tls]>=3.0.1',
+    'six'
+    ]
+if system() == 'Windows':
+    requirements.append('colorlog[windows]')
+else:
+    requirements.append('colorlog')
 
 # Setup information
 setup(
@@ -23,12 +34,7 @@ setup(
     setup_requires=['setuptools_scm'],
     test_suite = 'nose.collector',
     tests_require = ['nose'],
-    install_requires = [
-        'firecloud',
-        'docker[tls]>=3.0.1',
-        'six',
-        'colorlog[windows]'
-    ],
+    install_requires = requirements,
     classifiers = [
         "Development Status :: 3 - Alpha",
         "Programming Language :: Python :: 2",
