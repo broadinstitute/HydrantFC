@@ -6,22 +6,28 @@ import sys
 
 def main(argv=None):
     examples = '''
-Hydrant is a tool which aims to simplify and accelerate the development and
-maintenance of workflows for FireCloud (FC).  FC aims to provide a global
-infrastructure for collaborative, extreme-scale biomedical analysis and data
-sharing.  As a cloud computing tool, FC brings together a substantial range
-of related technologies, and for typical researchers who may not be software
-engineers or computer scientists, the complexity of learning and effectively
-utilzing this technology stack can be a daunting barrier to achieving their
-main goal: sharing and exploring research data, and running scienitfic codes
-upon that data, at scale.
+Hydrant aims to simplify and accelerate the development and maintenance of
+workflows for FireCloud.
+
+FireCloud aims to provide a global infrastructure for collaborative,
+extreme-scale biomedical analysis and data sharing.
+
+Hydrant is important because FireCloud brings together a substantial range
+of related technologies; and for typical researchers, many of whom may not
+be software engineers or computer scientists, the complexity of learning and
+effectively utilizing this technology stack can be a daunting barrier to
+achieving their main goal:
+
+        sharing and exploring research data, and running scienitfic
+        codes upon that data, at scale.
+
 
 The general process of using hydrant to migrate a code to FC looks like
 
  Hydrant Cmd    Purpose + Followup Manual Steps (denoted by *)
  -----------    -------------------------------------------------------------
     init        Generate a workflow directory tree, with templatized WDL
-                        * copy source code into task/src directory(ies)
+                        * copy/edit source code into task/src directory (ies)
                         * edit task/Dockerfile(s)
 
     build       Fabricate a docker image, using task/src/Dockerfile 

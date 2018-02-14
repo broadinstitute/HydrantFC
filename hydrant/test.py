@@ -4,6 +4,7 @@
 import os
 import sys
 import logging
+from json import load as json_load
 from subprocess import check_call
 from util import ArgumentParser, FIXEDPATHS, find_tool, initialize_logging
 from ConfigLoader import ConfigLoader
@@ -16,6 +17,16 @@ def test(wdl=None, inputs_json='tests/inputs.json'):
     if not os.path.exists(wdl):
         logging.exception("WDL not found: " + wdl)
         sys.exit(2)
+
+    # Validate JSON syntax before incurring cost of launching Cromwell
+    try:
+        _ = json_load(open(inputs_json))
+    except Exception as e:
+        (exc_type, exc_value) = sys.exc_info()[:2]
+        logging.error("validating JSON %s:\n\t%s (%s)" % \
+                        (inputs_json, exc_type.__name__, exc_value))
+        sys.exit(3)
+
     config = ConfigLoader().config.All
     runcromw = os.path.join(FIXEDPATHS.BIN, 'runcromw.sh')  # @UndefinedVariable
     CROMWELL = find_tool(config.Cromwell, "Command-line cromwell")
