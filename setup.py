@@ -18,7 +18,7 @@ setup(
             'hydrant = hydrant.hydrant:main'
         ]
     },
-    package_data = {'hydrant': ['bin/*', 'defaults/*.cfg']},
+    package_data = {'hydrant': ['bin/*', 'defaults/*']},
     use_scm_version=True,
     setup_requires=['setuptools_scm'],
     test_suite = 'nose.collector',
@@ -26,7 +26,8 @@ setup(
     install_requires = [
         'firecloud',
         'docker[tls]>=3.0.1',
-        'six'
+        'six',
+        'colorlog[windows]'
     ],
     classifiers = [
         "Development Status :: 3 - Alpha",

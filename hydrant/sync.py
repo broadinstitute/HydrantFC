@@ -4,7 +4,7 @@
 import os
 import sys
 import logging
-from util import ArgumentParser
+from util import ArgumentParser, initialize_logging
 from argparse import ArgumentTypeError
 
 Description = 'Update WDLs of local workflows which use this Docker'
@@ -22,4 +22,5 @@ def main(args=None):
     sync()
 
 if __name__ == '__main__':
+    initialize_logging()
     main()

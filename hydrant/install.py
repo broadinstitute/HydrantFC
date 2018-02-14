@@ -5,7 +5,7 @@ import os
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentTypeError
 from firecloud.fiss import meth_new
 from firecloud.fccore import __fcconfig as fcconfig
-from util import ArgumentParser
+from util import ArgumentParser, initialize_logging
 
 Description = 'Installs workflow(s) into the FC method repository'
 
@@ -51,4 +51,5 @@ def main(args=None):
     meth_new(args)
 
 if __name__ == '__main__':
+    initialize_logging()
     main()
