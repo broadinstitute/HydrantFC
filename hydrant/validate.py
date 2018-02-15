@@ -8,6 +8,7 @@ from io import open
 from subprocess import check_call, check_output
 from util import ArgumentParser, find_tool, initialize_logging
 from ConfigLoader import ConfigLoader
+from six import u
 
 Description = "Verify syntax of WDL workflow and generate test json"
 
@@ -44,7 +45,7 @@ def validate(wdl=None, inputs_json='tests/inputs.json'):
                         clean_line = line.rstrip().rstrip(',')
                         old_datum = clean_line.split(': ')
                         if len(old_datum) == 2:
-                            old_value = old_datum[1].strip().strip('"').replace('?', '')
+                            old_value = old_datum[1].strip().strip('"').replace('(optional) ', '').replace('?', '')
                             if old_value not in wdl_types and \
                                 old_value.find('[') < 1:
                                 old_data[old_datum[0].strip()] = clean_line
@@ -61,7 +62,7 @@ def validate(wdl=None, inputs_json='tests/inputs.json'):
                     # cromwell attempting to localize a google bucket file.
                     datum = datum.replace('.package": "Boolean"',
                                           '.package": "true"')
-                inputs.write(datum + '\n')
+                inputs.write(u('{}'.format(datum + '\n')))
         logging.info("Now edit %s to reflect input files etc, then run test",
                      inputs_json)
     except:
