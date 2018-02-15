@@ -31,9 +31,8 @@ setup(
     },
     package_data = {'hydrant': ['bin/*', 'defaults/*']},
     use_scm_version=True,
-    setup_requires=['setuptools_scm'],
-    test_suite = 'nose.collector',
-    tests_require = ['nose'],
+    setup_requires=['setuptools_scm', 'pytest-runner'],
+    tests_require = ['pytest'],
     install_requires = requirements,
     classifiers = [
         "Development Status :: 3 - Alpha",
