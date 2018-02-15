@@ -50,7 +50,7 @@ def validate(wdl=None, inputs_json='tests/inputs.json'):
                                 old_value.find('[') < 1:
                                 old_data[old_datum[0].strip()] = clean_line
             
-            no_comma = len(input_data) - 2
+            no_comma = len(input_data) - 1
             for idx, datum in enumerate(input_data, 1):
                 if idx > 1 and idx < no_comma:
                     datum_key = datum.split(': ')[0].strip()
