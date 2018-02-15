@@ -58,8 +58,8 @@ class WrappedColoredFormatter(ColoredFormatter):
             wrapped_lines.extend(self.wrapper.wrap(line))
             if idx == 0:
                 self.wrapper.initial_indent = self.wrapper.subsequent_indent
-        else:
-            self.wrapper.initial_indent = initial_indent
+        
+        self.wrapper.initial_indent = initial_indent
             
         return "\n".join(wrapped_lines)
 
