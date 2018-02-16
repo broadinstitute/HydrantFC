@@ -34,7 +34,7 @@ class ConfigLoader(object):
         '''
         self._config = SafeConfigParser(allow_no_value=True)
         self._config.optionxform = str
-        user_cfg = os.path.join(FIXEDPATHS.USERDIR, 'hydrant.cfg')  # @UndefinedVariable
+        user_cfg = os.path.join(FIXEDPATHS.USERDIR, 'hydrant.cfg')
         with open(user_cfg) as default_cfg:
             if PY32:
                 self._config.read_file(self.readline_generator(default_cfg))
