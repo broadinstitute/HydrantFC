@@ -1,5 +1,4 @@
 # encoding: utf-8
-import pytest
 import tempfile
 import shutil
 import os
@@ -36,6 +35,10 @@ def pytest_configure(config):
     
     os.path.expanduser=expanduser
     config._userdir = userdir
+    
+    # hydrant cannot be imported until after expanduser has been monkeytyped
+    from hydrant.util import initialize_user_dir
+    initialize_user_dir()
 
 def pytest_unconfigure(config):
     """
