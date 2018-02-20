@@ -9,7 +9,7 @@ from WDL import WDL
 from collections import namedtuple
 from shutil import copy2 as cp, copytree as copydir
 from util import ArgumentParser, FIXEDPATHS, initialize_logging
-from ConfigLoader import ConfigLoader, SafeConfigParser
+from ConfigLoader import ConfigLoader, SafeConfigParser, DockerSection
 
 sys.path.append(FIXEDPATHS.USERDIR)
 import templates  # @UnresolvedImport
@@ -46,6 +46,8 @@ def user_task(flow_task):
     raise ArgumentTypeError("Unable to locate {} in {}".format(task, flow))
 
 def task_config(cli_cfg):
+    if not os.path.isfile(cli_cfg):
+        raise ArgumentTypeError("Unable to locate {}".format(cli_cfg))
     return ConfigLoader(cli_cfg=cli_cfg).config
 
 def process_user_tasks(user_tasks, new_flow):
@@ -85,7 +87,7 @@ def generate_task(task, pkg, task_cfg=None):
         cfg = SafeConfigParser(allow_no_value=True)
         cfg.optionxform = str
         cfg.read(base_task_cfg)
-        for option in cfg.options('Docker'):
+        for option in DockerSection._fields:
             usr_val = getattr(task_cfg, option)
             if usr_val is not None:
                 cfg.set('Docker', option, usr_val)

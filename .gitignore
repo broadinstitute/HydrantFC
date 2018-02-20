@@ -102,3 +102,4 @@ ENV/
 /.project
 /.pydevproject
 /.settings/
+/.pytest_cache/

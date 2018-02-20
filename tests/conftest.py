@@ -1,4 +1,5 @@
 # encoding: utf-8
+import pytest
 import tempfile
 import shutil
 import os
@@ -33,7 +34,8 @@ def pytest_configure(config):
             idx = len(path)
         return userdir + path[idx:]
     
-    os.path.expanduser=expanduser
+    os.path.expanduser = expanduser
+    os.environ['HOME'] = userdir
     config._userdir = userdir
     
     # hydrant cannot be imported until after expanduser has been monkeytyped
@@ -46,4 +48,8 @@ def pytest_unconfigure(config):
     """
     shutil.rmtree(config._userdir)
 
-
+@pytest.fixture(scope='session')
+def workflows_dir(tmpdir_factory):
+    workflows = str(tmpdir_factory.mktemp('workflows'))
+    shutil.copy2(os.path.join('tests', 'cli.cfg'), workflows)
+    return workflows
