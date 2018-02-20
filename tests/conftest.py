@@ -50,6 +50,6 @@ def pytest_unconfigure(config):
 
 @pytest.fixture(scope='session')
 def workflows_dir(tmpdir_factory):
-    workflows = str(tmpdir_factory.mktemp('workflows'))
-    shutil.copy2(os.path.join('tests', 'cli.cfg'), workflows)
+    workflows = tmpdir_factory.mktemp('workflows')
+    shutil.copy2(os.path.join('tests', 'cli.cfg'), str(workflows))
     return workflows
