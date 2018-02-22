@@ -37,6 +37,7 @@ def build_image(client, path, tag):
         
     reg, namespace, _, tag = extract_full_tag(tag)
     task_cfg = SafeConfigParser(allow_no_value=True)
+    task_cfg.optionxform = str
     task_cfg.add_section('Docker')
     if reg is not None:
         task_cfg.set('Docker', 'Registry', reg)

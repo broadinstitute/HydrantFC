@@ -52,4 +52,6 @@ def pytest_unconfigure(config):
 def workflows_dir(tmpdir_factory):
     workflows = tmpdir_factory.mktemp('workflows', False)
     shutil.copy2(os.path.join('tests', 'cli.cfg'), str(workflows))
+    shutil.copytree(os.path.join('tests', 'smoketest'),
+                    os.path.join(str(workflows), 'smoketest'))
     return workflows

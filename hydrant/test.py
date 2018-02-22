@@ -15,16 +15,16 @@ def test(wdl=None, inputs_json='tests/inputs.json'):
     if not wdl:
         wdl = os.path.basename(os.getcwd()) + ".wdl"
     if not os.path.exists(wdl):
-        logging.exception("WDL not found: " + wdl)
+        logging.error("WDL not found: " + wdl)
         sys.exit(2)
 
     # Validate JSON syntax before incurring cost of launching Cromwell
     try:
         _ = json_load(open(inputs_json))
-    except Exception as e:
+    except:
         (exc_type, exc_value) = sys.exc_info()[:2]
-        logging.error("validating JSON %s:\n\t%s (%s)" % \
-                        (inputs_json, exc_type.__name__, exc_value))
+        logging.error("validating JSON %s:\n\t%s (%s)", inputs_json,
+                      exc_type.__name__, exc_value)
         sys.exit(3)
 
     config = ConfigLoader().config.All

@@ -28,10 +28,12 @@ class ConfigLoader(object):
     Takes a directory and loads config files
     '''
 
-    def __init__(self, path=os.getcwd(), cli_cfg=''):
+    def __init__(self, path=None, cli_cfg=''):
         '''
         Constructor
         '''
+        if path is None:
+            path = os.getcwd()
         self._config = SafeConfigParser(allow_no_value=True)
         self._config.optionxform = str
         user_cfg = os.path.join(FIXEDPATHS.USERDIR, 'hydrant.cfg')

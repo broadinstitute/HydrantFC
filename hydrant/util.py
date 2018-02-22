@@ -88,7 +88,9 @@ def add_default_arg(arg, kwargs):
 def get_version(path):
     return ConfigLoader(path).config.Docker.Tag or 'latest'
 
-def docker_repos(path=os.getcwd()):
+def docker_repos(path=None):
+    if path is None:
+        path = os.getcwd()
     for root, dirs, files in os.walk(path):
         # Don't descend more than 1 level
         if root.replace(path, '', 1).count(os.path.sep) == 1:
