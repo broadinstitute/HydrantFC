@@ -10,8 +10,6 @@
 #
 # Assumes color terminal (error content is bracked by RED control sequences)
 
-set -eo pipefail
-
 if [ "$1" = "-x" ] ; then
     # Helpful cli debugging
     set -x

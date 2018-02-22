@@ -6,6 +6,7 @@ import sys
 import logging
 import json
 from six.moves import input
+from six import u
 from getpass import getpass
 from util import ArgumentParser, add_default_arg, connect_to_daemon, initialize_logging
 from ConfigLoader import ConfigLoader
@@ -56,7 +57,7 @@ def push_image(client, repo, kwargs):
                     kwargs = docker_login(kwargs)
                     push_image(client, repo, kwargs)
             else:
-                logging.info(result)
+                logging.info(u(result))
 
 def docker_login(kwargs):
     kwargs['auth_config'] = {'username': input("Username: "),

@@ -61,7 +61,7 @@ def validate(wdl=None, inputs_json='tests/inputs.json'):
                     # If using packaging code, turn it on for testing to avoid
                     # cromwell attempting to localize a google bucket file.
                     datum = datum.replace('.package": "Boolean"',
-                                          '.package": "true"')
+                                          '.package": true')
                 inputs.write(u('{}'.format(datum + '\n')))
         logging.info("Now edit %s to reflect input files etc, then run test",
                      inputs_json)
