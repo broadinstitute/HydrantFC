@@ -2,6 +2,9 @@
 install:
 	pip install --upgrade .
 
+sinstall:
+	sudo -H pip install --upgrade .
+
 test:
 	python setup.py test
 	

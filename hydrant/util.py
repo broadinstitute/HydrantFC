@@ -109,7 +109,22 @@ def find_tool(url, name):
     if not os.path.exists(local):
         logging.info("%s not found. Downloading from %s to %s.",
                      name, url, local)
-        urlretrieve(url, local)
+        try:
+            urlretrieve(url, local)
+        except IOError:
+            logging.exception('Unable to download %s. If the below exception' +
+                              ' includes "%s", a TLS v1.2 compatible python' +
+                              'installation is required (stock OS X does not' +
+                              ' include the necessary OpenSSL version). For ' +
+                              'an OS X option, see:\n' +
+                              'http://docs.python-guide.org/en/latest/' +
+                              'starting/install/osx/', url,
+                              '[SSL: TLSV1_ALERT_PROTOCOL_VERSION]')
+            sys.exit(74) # sysexits.h IOERR exit status
+        except:
+            logging.exception('Unable to download %s.', url)
+            sys.exit(1)
+            
     return local
 
 def initialize_logging():
@@ -174,7 +189,7 @@ __DaemonLaunchers = defaultdict(
     Linux=None
 )
 
-def __launch_daemon(client, interval=3, numtries=10):
+def __launch_daemon(client, interval=6, numtries=10):
     # TODO: change from sys.stderr.write to logging.error/logging.exception, as
     # sys.stderr.write is bufferred
     stderr = sys.stderr.write
@@ -188,7 +203,7 @@ def __launch_daemon(client, interval=3, numtries=10):
     # Launch daemon ...
     stderr("Docker daemon not running, launching now ")
     try:
-        subprocess.check_output(launcher.split(), stderr=subprocess.STDOUT)
+        subprocess.check_call(launcher.split())
     except Exception as error:
         stderr("\nCould not find/launch daemon: %s\n\t%s\n" % (launcher, error))
         stderr("Docker can be downloaded from\n"+\
