@@ -1,12 +1,12 @@
 
 install:
-	pip install --upgrade .
+	pip2 install --upgrade .
 
 sinstall:
-	sudo -H pip install --upgrade .
+	sudo -H pip2 install --upgrade .
 
 test:
-	python setup.py test
+	python2 setup.py test
 	
 clean:
 	$(RM) *~ *.pyc

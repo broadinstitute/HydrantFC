@@ -52,12 +52,13 @@ def validate(wdl=None, inputs_json='tests/inputs.json'):
             
             no_comma = len(input_data) - 1
             for idx, datum in enumerate(input_data, 1):
-                if idx > 1 and idx < no_comma:
+                if idx > 1 and idx < len(input_data):
                     datum_key = datum.split(': ')[0].strip()
                     # Restore value previously set by user
                     if datum_key in old_data:
                         datum = old_data[datum_key]
-                    datum += ','
+                    if idx < no_comma:
+                        datum += ','
                     # If using packaging code, turn it on for testing to avoid
                     # cromwell attempting to localize a google bucket file.
                     datum = datum.replace('.package": "Boolean"',

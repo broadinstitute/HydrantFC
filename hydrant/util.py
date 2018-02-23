@@ -113,12 +113,12 @@ def find_tool(url, name):
             urlretrieve(url, local)
         except IOError:
             logging.exception('Unable to download %s. If the below exception' +
-                              ' includes "%s", a TLS v1.2 compatible python' +
+                              ' includes "%s", a TLS v1.2 compatible python ' +
                               'installation is required (stock OS X does not' +
                               ' include the necessary OpenSSL version). For ' +
                               'an OS X option, see:\n' +
                               'http://docs.python-guide.org/en/latest/' +
-                              'starting/install/osx/', url,
+                              'starting/install/osx', url,
                               '[SSL: TLSV1_ALERT_PROTOCOL_VERSION]')
             sys.exit(74) # sysexits.h IOERR exit status
         except:
