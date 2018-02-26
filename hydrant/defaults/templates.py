@@ -34,6 +34,7 @@ task_1_wdl_pkg = Template('''task $task {
     String null_file
     String package_name
     String package_archive="$${package_name}.zip"
+    Float? ram_gb
     Int? local_disk_gb
     Int? num_preemptions
 
@@ -56,6 +57,7 @@ task_1_wdl_pkg = Template('''task $task {
 
     runtime {
         docker : "$namespace/$task:$tag"
+        memory: "$${if defined(ram_gb) then ram_gb else '2'}GB"
         disks : "local-disk $${if defined(local_disk_gb) then local_disk_gb else '10'} HDD"
         preemptible : "$${if defined(num_preemptions) then num_preemptions else '0'}"
     }
@@ -80,6 +82,7 @@ task_n_wdl_pkg = Template('''task $task {
     String null_file
     File package_archive
     String package_name=basename(package_archive)
+    Float? ram_gb
     Int? local_disk_gb
     Int? num_preemptions
 
@@ -103,6 +106,7 @@ task_n_wdl_pkg = Template('''task $task {
 
     runtime {
         docker : "$namespace/$task:$tag"
+        memory: "$${if defined(ram_gb) then ram_gb else '2'}GB"
         disks : "local-disk $${if defined(local_disk_gb) then local_disk_gb else '10'} HDD"
         preemptible : "$${if defined(num_preemptions) then num_preemptions else '0'}"
     }
@@ -167,6 +171,7 @@ workflow_wdl_end_pkg = Template('''
 #   fullname
 #   username
 task_1_wdl = Template('''task $task {
+    Float? ram_gb
     Int? local_disk_gb
     Int? num_preemptions
 
@@ -184,6 +189,7 @@ task_1_wdl = Template('''task $task {
 
     runtime {
         docker : "$namespace/$task:$tag"
+        memory: "$${if defined(ram_gb) then ram_gb else '2'}GB"
         disks : "local-disk $${if defined(local_disk_gb) then local_disk_gb else '10'} HDD"
         preemptible : "$${if defined(num_preemptions) then num_preemptions else '0'}"
     }
@@ -204,6 +210,7 @@ task_1_wdl = Template('''task $task {
 #   fullname
 #   username
 task_n_wdl = Template('''task $task {
+    Float? ram_gb
     Int? local_disk_gb
     Int? num_preemptions
 
@@ -221,6 +228,7 @@ task_n_wdl = Template('''task $task {
 
     runtime {
         docker : "$namespace/$task:$tag"
+        memory: "$${if defined(ram_gb) then ram_gb else '2'}GB"
         disks : "local-disk $${if defined(local_disk_gb) then local_disk_gb else '10'} HDD"
         preemptible : "$${if defined(num_preemptions) then num_preemptions else '0'}"
     }
