@@ -4,16 +4,6 @@ from platform import system
 _README           = os.path.join(os.path.dirname(__file__), 'README.rst')
 _LONG_DESCRIPTION = open(_README).read()
 
-requirements = [
-    'firecloud',
-    'docker[tls]>=3.0.1',
-    'six'
-    ]
-if system() == 'Windows':
-    requirements.append('colorlog[windows]')
-else:
-    requirements.append('colorlog')
-
 # Setup information
 setup(
     name = 'hydrant',
@@ -33,7 +23,12 @@ setup(
     use_scm_version=True,
     setup_requires=['setuptools_scm', 'pytest-runner'],
     tests_require = ['pytest'],
-    install_requires = requirements,
+    install_requires = [
+        'firecloud',
+        'docker[tls]>=3.0.1',
+        'six',
+        'colorlog'
+    ],
     classifiers = [
         "Development Status :: 3 - Alpha",
         "Programming Language :: Python :: 2",
