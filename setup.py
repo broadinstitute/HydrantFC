@@ -25,6 +25,7 @@ setup(
     tests_require = ['pytest'],
     install_requires = [
         'firecloud',
+        'requests[security]',
         'docker[tls]>=3.0.1',
         'six',
         'colorlog'

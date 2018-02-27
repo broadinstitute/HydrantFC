@@ -6,9 +6,9 @@ import argparse
 from shutil import copy2 as cp
 from collections import namedtuple
 from pkg_resources import resource_filename
-from six.moves.urllib.request import urlretrieve
 from gettext import gettext as _
 import docker
+import requests
 import time
 import subprocess
 import sys
@@ -80,6 +80,21 @@ class ArgumentParser(argparse.ArgumentParser):
             self.exit()
         self.exit(2, _('%s: error: %s\n\n%s\n') % (self.prog, message,
                                                    self.format_help()))
+
+# derived from
+# https://github.com/requests/requests/issues/885#issuecomment-216838596
+# The urlretrieve function that is part of urllib uses 
+def urlretrieve(url, local):
+    """
+    The urlretrieve function that is part of urllib uses whatever version of
+    OpenSSL is available locally. By using the requests library (via the
+    requests[security] requirement in setup.py), we bypass that in favor of the
+    latest version. This simplifies usage on OS X and Windows.
+    """
+    r = requests.get(url, stream=True)
+    with open(local, 'wb') as f:
+        for chunk in r.iter_content():
+                f.write(chunk)
 
 def add_default_arg(arg, kwargs):
     kwargs['default'] = arg
