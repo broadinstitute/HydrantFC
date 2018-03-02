@@ -8,8 +8,9 @@ import json
 from six.moves import input
 from six import u
 from getpass import getpass
-from util import ArgumentParser, add_default_arg, connect_to_daemon, initialize_logging
-from ConfigLoader import ConfigLoader
+from hydrant.util import ArgParser, add_default_arg, initialize_logging
+from hydrant.docker_utils import connect_to_daemon
+from hydrant.ConfigLoader import ConfigLoader
 
 Description = "Push local Docker image to remote repository"
 
@@ -68,7 +69,7 @@ def docker_login(kwargs):
 def main(args=None):
     # TODO: allow bulk pushes from the workspace level like with build
     docker_cfg = ConfigLoader().config.Docker
-    parser = ArgumentParser(description=Description)
+    parser = ArgParser(description=Description)
 
     # Because parser.prog is initialized to the name of the top-level calling
     # module, it needs to be modified here to be consistent.

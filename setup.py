@@ -16,7 +16,7 @@ setup(
     url = 'https://github.com/broadinstitute/HydrantFC',
     entry_points = {
         'console_scripts': [
-            'hydrant = hydrant.hydrant:main'
+            'hydrant = hydrant.cli:main'
         ]
     },
     package_data = {'hydrant': ['bin/*', 'defaults/*']},

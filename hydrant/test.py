@@ -6,8 +6,8 @@ import sys
 import logging
 from json import load as json_load
 from subprocess import check_call
-from util import ArgumentParser, FIXEDPATHS, find_tool, initialize_logging
-from ConfigLoader import ConfigLoader
+from hydrant.util import ArgParser, FIXEDPATHS, find_tool, initialize_logging
+from hydrant.ConfigLoader import ConfigLoader
 
 Description = "Run local Cromwell on workflow, with tests/inputs.json"
 
@@ -37,7 +37,7 @@ def test(wdl=None, inputs_json='tests/inputs.json'):
         sys.exit(1)
 
 def main(args=None):
-    parser = ArgumentParser(description=Description)
+    parser = ArgParser(description=Description)
     if __name__ != '__main__':
         parser.prog += " " + __name__.rsplit('.', 1)[-1]
     

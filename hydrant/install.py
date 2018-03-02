@@ -5,7 +5,7 @@ import os
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentTypeError
 from firecloud.fiss import meth_new
 from firecloud.fccore import __fcconfig as fcconfig
-from util import ArgumentParser, initialize_logging
+from hydrant.util import ArgParser, initialize_logging
 
 Description = 'Installs workflow(s) into the FC method repository'
 
@@ -17,7 +17,7 @@ def ValidFile(filename):
 def main(args=None):
     method_name = os.path.basename(os.getcwd())
     wdl = method_name + '.wdl'
-    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
+    parser = ArgParser(formatter_class=ArgumentDefaultsHelpFormatter,
                             description=Description)
     # Because parser.prog is initialized to the name of the top-level calling
     # module, it needs to be modified here to be consistent.

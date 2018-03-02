@@ -6,8 +6,8 @@ import sys
 import logging
 from io import open
 from subprocess import check_call, check_output
-from util import ArgumentParser, find_tool, initialize_logging
-from ConfigLoader import ConfigLoader
+from hydrant.util import ArgParser, find_tool, initialize_logging
+from hydrant.ConfigLoader import ConfigLoader
 from six import u
 
 Description = "Verify syntax of WDL workflow and generate test json"
@@ -73,7 +73,7 @@ def validate(wdl=None, inputs_json='tests/inputs.json'):
         sys.exit(1)
 
 def main(args=None):
-    parser = ArgumentParser(description=Description)
+    parser = ArgParser(description=Description)
     if __name__ != '__main__':
         parser.prog += " " + __name__.rsplit('.', 1)[-1]
     

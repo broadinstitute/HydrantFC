@@ -1,15 +1,16 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-import os
-import sys
-import pwd
 from argparse import ArgumentTypeError
-from WDL import WDL
 from collections import namedtuple
+import os
+import pwd
 from shutil import copy2 as cp, copytree as copydir
-from util import ArgumentParser, FIXEDPATHS, initialize_logging
-from ConfigLoader import ConfigLoader, SafeConfigParser, DockerSection
+import sys
+
+from hydrant.ConfigLoader import ConfigLoader, SafeConfigParser, DockerSection
+from hydrant.WDL import WDL
+from hydrant.util import ArgParser, FIXEDPATHS, initialize_logging
 
 sys.path.append(FIXEDPATHS.USERDIR)
 import templates  # @UnresolvedImport
@@ -91,7 +92,7 @@ def generate_task(task, pkg, task_cfg=None):
             usr_val = getattr(task_cfg, option)
             if usr_val is not None:
                 cfg.set('Docker', option, usr_val)
-        with open(out_task_cfg, 'wb') as task_cfg_file:
+        with open(out_task_cfg, 'w') as task_cfg_file:
             cfg.write(task_cfg_file)
             
     
@@ -239,7 +240,7 @@ def generate_workflow(workflow, num_tasks, user_tasks, config, pkg):
 
 def main(args=None):
 
-    parser = ArgumentParser(description=Description)
+    parser = ArgParser(description=Description)
 
     # Because parser.prog is initialized to the name of the top-level calling
     # module, it needs to be modified here to be consistent.

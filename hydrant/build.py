@@ -1,12 +1,15 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
+import json
+import logging
 import os
 import sys
-import logging
-import json
-from util import ArgumentParser, docker_repos, add_default_arg, connect_to_daemon, initialize_logging
-from ConfigLoader import ConfigLoader, SafeConfigParser
+
+from hydrant.ConfigLoader import ConfigLoader, SafeConfigParser
+from hydrant.util import ArgParser, add_default_arg, initialize_logging
+from hydrant.docker_utils import docker_repos, connect_to_daemon
+
 
 Description = "Build docker image defined in the local Dockerfile"
 
@@ -44,7 +47,7 @@ def build_image(client, path, tag):
     task_cfg.set('Docker', 'Namespace', namespace)
     task_cfg.set('Docker', 'Tag', tag)
     
-    with open(os.path.join(path, 'hydrant.cfg'), 'wb') as task_cfg_file:
+    with open(os.path.join(path, 'hydrant.cfg'), 'w') as task_cfg_file:
         task_cfg.write(task_cfg_file)
         
 def main(args=None):
@@ -80,7 +83,7 @@ def main(args=None):
         repo_kwargs['help'] += ''', requires hydrant.cfg file if building
                                multiple images with tags other than "latest"'''
         
-    parser = ArgumentParser(description=Description)
+    parser = ArgParser(description=Description)
 
     # Because parser.prog is initialized to the name of the top-level calling
     # module, it needs to be modified here to be consistent.

@@ -3,7 +3,7 @@
 import pytest
 import subprocess
 from platform import system
-from hydrant.util import connect_to_daemon
+from hydrant.docker_utils import connect_to_daemon
 from time import sleep
  
 # For now, launching the docker daemon only works on Mac OSX (Darwin). As more

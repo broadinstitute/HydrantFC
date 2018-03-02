@@ -2,7 +2,6 @@
 
 import pytest
 from hydrant import validate
-from os import rename
 
 def test_main_no_wdl():
     with pytest.raises(SystemExit) as excinfo:

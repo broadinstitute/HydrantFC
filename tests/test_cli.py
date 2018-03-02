@@ -1,10 +1,10 @@
 # encoding: utf-8
 import pytest
-from hydrant import hydrant
+from hydrant import cli
 
 def test_main():
     with pytest.raises(SystemExit) as excinfo:
-        hydrant.main()
+        cli.main()
     assert str(excinfo.value) == '0'
 
 @pytest.fixture(scope='module',
@@ -14,5 +14,5 @@ def hydrant_func(request):
 
 def test_help(hydrant_func):
     with pytest.raises(SystemExit) as excinfo:
-        hydrant.main([hydrant_func, '-h'])
+        cli.main([hydrant_func, '-h'])
     assert str(excinfo.value) == '0'
