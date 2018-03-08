@@ -14,7 +14,6 @@ from hydrant.util import ArgParser, FIXEDPATHS, initialize_logging
 
 sys.path.append(FIXEDPATHS.USERDIR)
 import templates  # @UnresolvedImport
-
 Description = "Create dir & templates for authoring tasks & workflows"
 UserTaskList = namedtuple('UserTaskList', 'flow tasks')
 
@@ -114,11 +113,19 @@ def task_wdl_contents(task_name, task_num, workflow, fullname, username,
                       config, pkg):
     tag = 1
     namespace = config.Docker.Namespace
+    repo = task_name
     if config.Tasks is not None:
         task_cfg = getattr(config.Tasks, task_name, None)
         if task_cfg is not None:
-            tag = task_cfg.Tag or tag
-            namespace = task_cfg.Namespace or namespace
+            if task_cfg.Image is not None:
+                namespace, repo = task_cfg.Image.rsplit('/', 1)
+                if ':' in repo:
+                    repo, tag = repo.rsplit(':', 1)
+                else:
+                    tag = 'latest'
+            else:
+                tag = task_cfg.Tag or tag
+                namespace = task_cfg.Namespace or namespace
     if task_num == 1:
         contents = templates.task_1_wdl_pkg if pkg else templates.task_1_wdl
     else:
@@ -126,7 +133,7 @@ def task_wdl_contents(task_name, task_num, workflow, fullname, username,
     
     return contents.safe_substitute(task=task_name, workflowname=workflow,
                                     fullname=fullname, username=username,
-                                    tag=tag,
+                                    tag=tag, repo=repo,
                                     namespace=namespace or '<namespace>')
 
 def workflow_wdl_calls(task_name, task_num, workflow, tot_tasks, prev_task, pkg):
@@ -228,8 +235,10 @@ def generate_workflow(workflow, num_tasks, user_tasks, config, pkg):
     
     if config.Tasks is not None:
         for task in config.Tasks._fields:
-            task_folder = os.path.join(workflow, task)
-            generate_task(task_folder, pkg, getattr(config.Tasks, task))
+            task_cfg = getattr(config.Tasks, task)
+            if task_cfg.Image is None:
+                task_folder = os.path.join(workflow, task)
+                generate_task(task_folder, pkg, task_cfg)
     # test folder
     os.mkdir(os.path.join(workflow, "tests"))
 
@@ -255,11 +264,13 @@ def main(args=None):
                         help='Number of empty tasks to create')
     parser.add_argument('-c', '--config', type=task_config,
                         help='Config file with [Task <task_name>] sections ' +
-                             'that may contain Src=<path/to/src> and ' +
+                             'that may contain Src=<path/to/src>, ' +
+                             'Image=<[registry/]namespcae/repo[:tag]>, and ' +
                              'any [Docker] section arguments to initialize ' +
-                             'tasks with specified names, copy source code ' +
-                             "to each task's src directory, and initialize " +
-                             "each task's hydrant.cfg")
+                             'tasks with specified names, then copy source ' +
+                             "code to each task's src directory and " +
+                             "initialize each task's hydrant.cfg, or " +
+                             'initialize WDL with prexisting docker image(s)')
     parser.add_argument('workflow', type=new_folder,
                         help='Name of template folder')
     parser.add_argument('task', nargs='*', type=user_task,

@@ -4,8 +4,7 @@
 import os
 
 from hydrant.ConfigLoader import ConfigLoader
-from hydrant.util import ArgParser, initialize_user_dir, initialize_logging, log_to_logfile
-from pkg_resources import get_distribution
+from hydrant.util import ArgParser, initialize_user_dir, initialize_logging, log_to_logfile, version
 
 
 __version__ = "TESTING"
@@ -42,4 +41,4 @@ def main(args=None):
 if __name__ == '__main__':
     main()
 else:
-    __version__ = get_distribution(__name__.split('.', 1)[0]).version
+    __version__ = version()

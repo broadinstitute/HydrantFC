@@ -32,9 +32,13 @@ def test_cli_cfg(workflows_dir):
         for task in task_cfgs._fields:
             # Confirm presence of task entry in WDL
             assert task in wdl_obj.tasks
-            taskdir = os.path.join(flow_name, task)
-            assert os.path.isdir(taskdir)
-            docker_cfg = ConfigLoader(taskdir).config.Docker
             task_cfg = getattr(task_cfgs, task)
-            for field in docker_cfg._fields:
-                assert getattr(docker_cfg, field) == getattr(task_cfg, field)
+            taskdir = os.path.join(flow_name, task)
+            if task_cfg.Image is None:
+                assert os.path.isdir(taskdir)
+                docker_cfg = ConfigLoader(taskdir).config.Docker
+                for field in docker_cfg._fields:
+                    assert getattr(docker_cfg, field) == getattr(task_cfg, field)
+            else:
+                assert not os.path.isdir(taskdir)
+                    

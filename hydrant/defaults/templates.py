@@ -13,6 +13,8 @@ Keywords:
   fullname     = Full name of user (only works on unix-based systems)
   username     = Username on system (only works on unix-based systems)
   namespace    = Docker namespace (can be predefined via CLI or global config)
+  repo         = Docker repository
+                 (can be predefined as part of Image field of CLI config)
   tag          = Docker image tag (can be predefined via CLI config)
 See https://docs.python.org/3/tutorial/stdlib2.html#templating
 '''
@@ -26,6 +28,7 @@ from string import Template
 #   task
 #   workflowname
 #   namespace
+#   repo
 #   tag
 #   fullname
 #   username
@@ -56,7 +59,7 @@ task_1_wdl_pkg = Template('''task $task {
     }
 
     runtime {
-        docker : "$namespace/$task:$tag"
+        docker : "$namespace/$repo:$tag"
         memory: "$${if defined(ram_gb) then ram_gb else '2'}GB"
         disks : "local-disk $${if defined(local_disk_gb) then local_disk_gb else '10'} HDD"
         preemptible : "$${if defined(num_preemptions) then num_preemptions else '0'}"
@@ -74,6 +77,7 @@ task_1_wdl_pkg = Template('''task $task {
 #   task
 #   workflowname
 #   namespace
+#   repo
 #   tag
 #   fullname
 #   username
@@ -105,7 +109,7 @@ task_n_wdl_pkg = Template('''task $task {
     }
 
     runtime {
-        docker : "$namespace/$task:$tag"
+        docker : "$namespace/$repo:$tag"
         memory: "$${if defined(ram_gb) then ram_gb else '2'}GB"
         disks : "local-disk $${if defined(local_disk_gb) then local_disk_gb else '10'} HDD"
         preemptible : "$${if defined(num_preemptions) then num_preemptions else '0'}"
@@ -167,6 +171,7 @@ workflow_wdl_end_pkg = Template('''
 #   task
 #   workflowname
 #   namespace
+#   repo
 #   tag
 #   fullname
 #   username
@@ -188,7 +193,7 @@ task_1_wdl = Template('''task $task {
     }
 
     runtime {
-        docker : "$namespace/$task:$tag"
+        docker : "$namespace/$repo:$tag"
         memory: "$${if defined(ram_gb) then ram_gb else '2'}GB"
         disks : "local-disk $${if defined(local_disk_gb) then local_disk_gb else '10'} HDD"
         preemptible : "$${if defined(num_preemptions) then num_preemptions else '0'}"
@@ -206,6 +211,7 @@ task_1_wdl = Template('''task $task {
 #   task
 #   workflowname
 #   namespace
+#   repo
 #   tag
 #   fullname
 #   username
@@ -227,7 +233,7 @@ task_n_wdl = Template('''task $task {
     }
 
     runtime {
-        docker : "$namespace/$task:$tag"
+        docker : "$namespace/$repo:$tag"
         memory: "$${if defined(ram_gb) then ram_gb else '2'}GB"
         disks : "local-disk $${if defined(local_disk_gb) then local_disk_gb else '10'} HDD"
         preemptible : "$${if defined(num_preemptions) then num_preemptions else '0'}"

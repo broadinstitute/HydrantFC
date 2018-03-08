@@ -90,7 +90,7 @@ def main(args=None):
     # (i.e. so hydrant docker build -h returns a usage that begins with
     # hydrant docker build rather than only hydrant)
     if __name__ != '__main__':
-        parser.prog += " docker " + __name__.rsplit('.', 1)[-1]
+        parser.prog += " " + __name__.rsplit('.', 1)[-1]
 
     parser.add_argument('-R', '--registry', **reg_kwargs)
     parser.add_argument('-n', '--namespace', **ns_kwargs)

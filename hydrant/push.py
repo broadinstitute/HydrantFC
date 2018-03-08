@@ -76,7 +76,7 @@ def main(args=None):
     # (i.e. so hydrant docker push -h returns a usage that begins with
     # hydrant docker push rather than only hydrant)
     if __name__ != '__main__':
-        parser.prog += " docker " + __name__.rsplit('.', 1)[-1]
+        parser.prog += " " + __name__.rsplit('.', 1)[-1]
         
     repo = os.path.basename(os.getcwd())
     

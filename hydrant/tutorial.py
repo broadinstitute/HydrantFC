@@ -46,10 +46,10 @@ The general process of using hydrant to migrate a code to FC looks like
                 reference the latest method snapshot installed to the FC
                 method repository, edit method parameters, etc
 
-To show how this works in practice let's begin with the simplest case: creating
-a FC worfklow that executes a single task, the source code for which is contained
-within a single file.
+To see how these commands work together in practice, look in the ./tests
+subdirectory for examples.  A flowchart and documentation is available at
 
+                https://github.com/broadinstitute/HydrantFC
 '''
     return pydoc.pager(examples)
 

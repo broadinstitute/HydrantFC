@@ -7,8 +7,11 @@ import requests
 from colorlog import ColoredFormatter
 from textwrap import TextWrapper
 from shutil import copy2 as cp
+from io import open
 from collections import namedtuple
-from pkg_resources import resource_filename
+from pkg_resources import resource_filename, get_distribution
+from six import u
+from six.moves import input
 from six.moves.urllib.request import urlretrieve
 from gettext import gettext as _
 
@@ -74,6 +77,9 @@ class ArgParser(argparse.ArgumentParser):
             self.exit()
         self.exit(2, _('%s: error: %s\n\n%s\n') % (self.prog, message,
                                                    self.format_help()))
+
+def version():
+    return get_distribution(__name__.split('.', 1)[0]).version
 
 # derived from
 # https://github.com/requests/requests/issues/885#issuecomment-216838596
@@ -146,34 +152,94 @@ def log_to_logfile(logfile):
     logger.addHandler(file_handler)
 
 def initialize_user_dir():
-
+    old_version = None
+    cur_version = version()
+    version_file = os.path.join(FIXEDPATHS.USERDIR, 'VERSION')
+    version_conflict_action = None
+    
     # Ensure custom Hydrant directory exists for user
     if not os.path.isdir(FIXEDPATHS.USERDIR):
         logging.info("First run of hydrant, creating %s", FIXEDPATHS.USERDIR)
         os.mkdir(FIXEDPATHS.USERDIR)
+        with open(version_file, 'w') as version_fp:
+            version_fp.write(u(cur_version + "\n"))
+
+    # Check that version of .hydrant matches hydrant version
+    if os.path.isfile(version_file):
+        with open(version_file, 'r') as version_fp:
+            old_version = version_fp.read().strip()
+    
+    if cur_version != old_version:
+        logging.info("User template and config files are from an older " +
+                     "version, and may need to be updated to ensure proper " +
+                     "functionality.")
+        while version_conflict_action is None:
+            version_conflict_action = \
+                input("(R)eplace, (B)ackup, (S)kip: ").strip()
+            if version_conflict_action.lower() in ('r', 'replace'):
+                version_conflict_action = 'replace'
+                logging.info("Replacing existing template and config files " +
+                             "with the latest versions.")
+            elif version_conflict_action.lower() in ('b', 'backup'):
+                version_conflict_action = 'backup'
+                logging.info("Creating backups of existing template and " +
+                             "config files, and adding latest versions.")
+            elif version_conflict_action.lower() in ('s', 'skip'):
+                version_conflict_action = 'skip'
+                logging.warn("Skipping updating existing template and " +
+                             "config files. Please note that this may cause " +
+                             "unexpected failures. To bring this dialog " +
+                             "back, delete the VERSION file in %s before " +
+                             "running hydrant again.", FIXEDPATHS.USERDIR)
+            else:
+                logging.warn("Unknown argument: %s", version_conflict_action)
+                version_conflict_action = None
 
     # Ensure that it contains a default config file
     if not os.path.isfile(os.path.join(FIXEDPATHS.USERDIR, 'hydrant.cfg')):
-        user_cfg = os.path.join(FIXEDPATHS.DEFAULTS, 'user.cfg')
-        hydrant_cfg = os.path.join(FIXEDPATHS.USERDIR, 'hydrant.cfg')
-        logging.info('Generating initial hydrant.cfg')
-        cp(user_cfg, hydrant_cfg)
-        logging.info("%s added. You may edit using INI file structure and " +
-                     "basic interpolation as defined here:\n" +
-                     "\thttps://docs.python.org/3/library/configparser.html" +
-                     "#supported-ini-file-structure\nWorkspaces list may be " +
-                     "defined with commas (Workspaces=ws1,ws2,ws3).",
-                     hydrant_cfg)
+        _initialize_user_cfg()
+    elif version_conflict_action is not None \
+         and version_conflict_action != 'skip':
+        _initialize_user_cfg(version_conflict_action == 'backup')
     
     # Ensure that it contains a wdl template file
     if not os.path.isfile(os.path.join(FIXEDPATHS.USERDIR, 'templates.py')):
-        default_templates = os.path.join(FIXEDPATHS.DEFAULTS, 'templates.py')
-        user_templates = os.path.join(FIXEDPATHS.USERDIR, 'templates.py')
-        logging.info('Generating initial templates.py')
-        cp(default_templates, user_templates)
-        logging.info("%s added. You may edit using python string.Template " +
-                     "notation:\n\thttps://docs.python.org/3/tutorial/" +
-                     "stdlib2.html#templating\n" +
-                     "See doc and comments in the file for details.",
-                     user_templates)
+        _initialize_templates()
+    elif version_conflict_action is not None \
+         and version_conflict_action != 'skip':
+        _initialize_templates(version_conflict_action == 'backup')
+        
+    # Update VERSION if necessary
+    if version_conflict_action is not None:
+        with open(version_file, 'w') as version_fp:
+            version_fp.write(u(cur_version + "\n"))
 
+def _initialize_user_cfg(backup=False):
+    user_cfg = os.path.join(FIXEDPATHS.DEFAULTS, 'user.cfg')
+    hydrant_cfg = os.path.join(FIXEDPATHS.USERDIR, 'hydrant.cfg')
+    if backup and os.path.isfile(hydrant_cfg):
+        hydrant_bak = hydrant_cfg + '.bak'
+        logging.info("Backing up %s to %s", hydrant_cfg, hydrant_bak)
+        cp(hydrant_cfg, hydrant_bak)
+    logging.info('Generating initial hydrant.cfg')
+    cp(user_cfg, hydrant_cfg)
+    logging.info("%s added. You may edit using INI file structure and basic " +
+                 "interpolation as defined here:\n" +
+                 "\thttps://docs.python.org/3/library/configparser.html" +
+                 "#supported-ini-file-structure\nWorkspaces list may be " +
+                 "defined with commas (Workspaces=ws1,ws2,ws3).", hydrant_cfg)
+
+def _initialize_templates(backup=False):
+    default_templates = os.path.join(FIXEDPATHS.DEFAULTS, 'templates.py')
+    user_templates = os.path.join(FIXEDPATHS.USERDIR, 'templates.py')
+    if backup and os.path.isfile(user_templates):
+        templates_bak = user_templates + '.bak'
+        logging.info("Backing up %s to %s", user_templates, templates_bak)
+        cp(user_templates, templates_bak)
+    logging.info('Generating initial templates.py')
+    cp(default_templates, user_templates)
+    logging.info("%s added. You may edit using python string.Template " +
+                 "notation:\n\thttps://docs.python.org/3/tutorial/" +
+                 "stdlib2.html#templating\n" +
+                 "See doc and comments in the file for details.",
+                 user_templates)

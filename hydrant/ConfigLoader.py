@@ -21,7 +21,8 @@ FireCloudSection = namedtuple('FireCloudSection',
                               ['MethodNamespace', 'Workspaces', 'Synopsis',
                                'Documentation', 'SnapshotComment'])
 DockerSection = namedtuple('DockerSection', 'Registry Namespace Tag')
-TaskSubsection = namedtuple('TaskSubSection', ('Src',) + DockerSection._fields)
+TaskSubsection = namedtuple('TaskSubSection', ('Src', 'Image') +
+                                              DockerSection._fields)
 
 class ConfigLoader(object):
     '''
