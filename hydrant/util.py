@@ -83,7 +83,6 @@ def version():
 
 # derived from
 # https://github.com/requests/requests/issues/885#issuecomment-216838596
-# The urlretrieve function that is part of urllib uses 
 def urlretrieve(url, local):
     """
     The urlretrieve function that is part of urllib uses whatever version of
@@ -93,8 +92,8 @@ def urlretrieve(url, local):
     """
     r = requests.get(url, stream=True)
     with open(local, 'wb') as f:
-        for chunk in r.iter_content():
-                f.write(chunk)
+        for chunk in r.iter_content(chunk_size=1024):
+            f.write(chunk)
 
 def add_default_arg(arg, kwargs):
     kwargs['default'] = arg

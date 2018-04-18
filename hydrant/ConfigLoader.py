@@ -19,7 +19,8 @@ Config = namedtuple('Config', 'All FireCloud Docker Tasks')
 AllSection = namedtuple('AllSection', 'Logfile Cromwell WDLtool')
 FireCloudSection = namedtuple('FireCloudSection',
                               ['MethodNamespace', 'Workspaces', 'Synopsis',
-                               'Documentation', 'SnapshotComment'])
+                               'Documentation', 'SnapshotComment', 'Owners',
+                               'Readers', 'Writers'])
 DockerSection = namedtuple('DockerSection', 'Registry Namespace Tag')
 TaskSubsection = namedtuple('TaskSubSection', ('Src', 'Image') +
                                               DockerSection._fields)

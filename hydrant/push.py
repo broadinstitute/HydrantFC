@@ -34,6 +34,7 @@ def find_registry_namespace(client, repo, config, error_on_fail=False):
 
 def push_image(client, repo, kwargs):
     for line in client.images.push(repo, **kwargs):
+        line = line.decode()
         for result in line.splitlines():
             if 'errorDetail' in result:
                 result = json.dumps(json.loads(result), indent=2)
@@ -58,7 +59,7 @@ def push_image(client, repo, kwargs):
                     kwargs = docker_login(kwargs)
                     push_image(client, repo, kwargs)
             else:
-                logging.info(u(result))
+                logging.info(result)
 
 def docker_login(kwargs):
     kwargs['auth_config'] = {'username': input("Username: "),
