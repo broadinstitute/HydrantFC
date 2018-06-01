@@ -34,7 +34,7 @@ def find_registry_namespace(client, repo, config, error_on_fail=False):
 
 def push_image(client, repo, kwargs):
     for line in client.images.push(repo, **kwargs):
-        line = line.decode()
+        line = u(line.decode())
         for result in line.splitlines():
             if 'errorDetail' in result:
                 result = json.dumps(json.loads(result), indent=2)
