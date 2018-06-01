@@ -23,7 +23,7 @@ setup(
     setup_requires=['setuptools_scm', 'pytest-runner'],
     tests_require = ['pytest'],
     install_requires = [
-        'firecloud>=0.16.13',
+        'firecloud>=0.16.14',
         'requests[security]',
         'docker[tls]>=3.0.1',
         'six',
