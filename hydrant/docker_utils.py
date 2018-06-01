@@ -6,13 +6,32 @@ import platform
 import subprocess
 import sys
 import time
+import logging
 
 import docker
+from firecloud import which
 from hydrant.ConfigLoader import ConfigLoader
+from six import u
 
 # Convenient shorthands for readability
 from docker.errors import APIError as apiError
 from requests.exceptions import ConnectionError as connError
+
+# Add credential helpers if they're missing
+if which('docker') is not None:
+    credHelpers = docker.auth.load_config().get('credHelpers')
+    if not credHelpers or \
+       sum(helper.endswith('gcr.io') for helper in credHelpers) == 0:
+        logging.info("Credential helpers for gcr.io not found. Attempting to" +
+                     " install.")
+        try:
+            output = subprocess.check_output(['gcloud', 'auth',
+                                              'configure-docker', '--quiet'],
+                                             stderr=subprocess.STDOUT)
+            logging.info(u(output.decode()))
+        except subprocess.CalledProcessError as cpe:
+            logging.warning(u' '.join(cpe.cmd) + u":\n\t" +
+                            u(cpe.output.decode()))
 
 def get_version(path):
     return ConfigLoader(path).config.Docker.Tag or 'latest'

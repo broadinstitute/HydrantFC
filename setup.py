@@ -1,6 +1,5 @@
 import os
 from setuptools import setup, find_packages
-from platform import system
 _README           = os.path.join(os.path.dirname(__file__), 'README.rst')
 _LONG_DESCRIPTION = open(_README).read()
 
@@ -24,7 +23,7 @@ setup(
     setup_requires=['setuptools_scm', 'pytest-runner'],
     tests_require = ['pytest'],
     install_requires = [
-        'firecloud',
+        'firecloud>=0.16.13',
         'requests[security]',
         'docker[tls]>=3.0.1',
         'six',
