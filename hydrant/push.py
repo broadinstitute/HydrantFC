@@ -6,7 +6,6 @@ import sys
 import logging
 import json
 from six.moves import input
-from six import u
 from getpass import getpass
 from hydrant.util import ArgParser, add_default_arg, initialize_logging
 from hydrant.docker_utils import connect_to_daemon
@@ -34,7 +33,7 @@ def find_registry_namespace(client, repo, config, error_on_fail=False):
 
 def push_image(client, repo, kwargs):
     for line in client.images.push(repo, **kwargs):
-        line = u(line.decode())
+        line = line.decode('utf-8')
         for result in line.splitlines():
             if 'errorDetail' in result:
                 result = json.dumps(json.loads(result), indent=2)

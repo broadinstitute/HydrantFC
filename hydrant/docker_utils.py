@@ -28,10 +28,10 @@ if which('docker') is not None:
             output = subprocess.check_output(['gcloud', 'auth',
                                               'configure-docker', '--quiet'],
                                              stderr=subprocess.STDOUT)
-            logging.info(u(output.decode()))
+            logging.info(output.decode('utf-8'))
         except subprocess.CalledProcessError as cpe:
             logging.warning(u' '.join(cpe.cmd) + u":\n\t" +
-                            u(cpe.output.decode()))
+                            cpe.output.decode('utf-8'))
 
 def get_version(path):
     return ConfigLoader(path).config.Docker.Tag or 'latest'
