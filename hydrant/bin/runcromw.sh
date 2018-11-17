@@ -8,7 +8,7 @@
 #       . automatically finds and displays the contents of stderr 
 #       . creates soft link to the execution directory, called latest
 #
-# Assumes color terminal (error content is bracked by RED control sequences)
+# Assumes color terminal (error content is bracketed by RED control sequences)
 
 set -o pipefail
 
@@ -44,8 +44,8 @@ chkfile $PathToWDL
 chkfile $PathToInputs
 chkfile $Options
 
-TaskNames=(`awk '/^[[:space:]]*task/ {print $2}' $PathToWDL`)
-FlowName=`awk '/^[[:space:]]*workflow/ {print $2; exit}' $PathToWDL`
+TaskNames=(`awk '/^[ 	]*task/ {print $2}' $PathToWDL`)
+FlowName=`awk '/^[ 	]*workflow/ {print $2; exit}' $PathToWDL`
 ExecDir=running
 DoneDir=latest
 LogFile=run-${FlowName}.`date +"%Y_%m_%d__%H_%M_%S"`.log
